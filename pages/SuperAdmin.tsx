@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Store } from '../services/store';
 import { LibraryAccount, Notification } from '../types';
@@ -538,7 +539,7 @@ const NotificationsView = ({ accounts }: { accounts: LibraryAccount[] }) => {
 
         setIsSending(true);
         try {
-            const targetIds = target === 'ALL' ? accounts.map(a => a.id) : Array.from(selectedIds);
+            const targetIds: string[] = target === 'ALL' ? accounts.map(a => a.id) : Array.from(selectedIds);
             
             if (targetIds.length === 0) {
                 alert("No libraries found to send message to.");
@@ -568,7 +569,7 @@ const NotificationsView = ({ accounts }: { accounts: LibraryAccount[] }) => {
             alert(`Notification sent to ${targetIds.length} libraries!`);
             setTitle(''); setMessage(''); setImageUrl(''); setCtaLink(''); setCtaText('');
             setSelectedIds(new Set<string>());
-        } catch (e: any) {
+        } catch (e: unknown) {
             console.error(e);
             const errorMessage = e instanceof Error ? e.message : String(e);
             alert("Failed to send: " + errorMessage);

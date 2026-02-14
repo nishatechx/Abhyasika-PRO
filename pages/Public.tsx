@@ -517,9 +517,8 @@ export const Landing = () => {
                     <a href="#contact" className="hover:text-white transition-colors">Contact</a>
                 </div>
             </div>
-            <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
-                <p>Made with ❤️ for Maharashtra.</p>
-                <div className="text-center md:text-right mt-4 md:mt-0">
+            <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-center items-center text-sm">
+                <div className="text-center w-full">
                     <p className="text-white font-medium mb-1">
                         Powered by <a href="https://www.nishatech.in" target="_blank" className="text-orange-500 hover:text-orange-400 transition-colors">Nish Tech</a>
                     </p>
@@ -593,8 +592,8 @@ export const Login = ({ onLogin }: { onLogin: (u: any) => void }) => {
         <div className="bg-[#061525] py-10 px-6 shadow-2xl shadow-black/50 sm:rounded-2xl sm:px-10 border border-slate-800">
           
           <div className="flex justify-center mb-8">
-            <div className="w-full max-w-[280px] h-24 flex items-center justify-center">
-              <img src={HERO_LOGO_URL} className="w-full h-full object-contain drop-shadow-lg" alt="App Logo" />
+            <div className="w-full px-8 flex items-center justify-center">
+              <img src={HERO_LOGO_URL} className="w-full h-auto object-contain drop-shadow-lg" alt="App Logo" />
             </div>
           </div>
 
