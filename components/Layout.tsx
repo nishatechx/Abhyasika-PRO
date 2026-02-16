@@ -27,7 +27,7 @@ interface LayoutProps {
   setUser: (u: any) => void;
 }
 
-const DEFAULT_LOGO = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGrS0W_C2fEoxXrGD9yVHhOSlX5uy_gZgATDGGFEKQMvAdczkaY8odZof1-WHMQbOTiACJ1zRGLmw6vn4jpXboQJ1Te52ep9ngIfBVXB1BBWzhX9Cjv0PzRG5OXr5hPjf9hg24ekO2JITnXCMLIdS5K_qwCyZjI_0Q6w1i0Crf5GTJCzj9F_rWDYDJURo/s16000/Digital%20Abhyasika%20Logo.png";
+const DEFAULT_LOGO = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh_Y56WdBxrCloSgXFwUGPI96xrDhH3pNHoLDAaltDDvg-5QQe7LflPvxcAvE4hyphenhyphen_hqimXuJy4V4DsIo2rKtKnkOEDY3JRVgHKpnZJunLs6d9ilffrMMXhZzAz-Xp5pWibseXWrwysTt_iKBrlpBAdaL6RcTgKirVRPAIHvoEZaigtS6iB44OH7xsjfFwk/s16000/Digital%20Abhyasika%20Logo%20Borderd.png";
 
 export const Layout: React.FC<LayoutProps> = ({ children, user, setUser }) => {
   const [isMobileOpen, setIsMobileOpen] = useState(false);

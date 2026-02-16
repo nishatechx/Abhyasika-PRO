@@ -24,12 +24,16 @@ import {
   Star,
   ArrowLeft,
   Mail,
-  Globe
+  Globe,
+  ArrowDown,
+  LogIn
 } from 'lucide-react';
 import { LibraryProfile } from '../types';
 
-const LOGO_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGrS0W_C2fEoxXrGD9yVHhOSlX5uy_gZgATDGGFEKQMvAdczkaY8odZof1-WHMQbOTiACJ1zRGLmw6vn4jpXboQJ1Te52ep9ngIfBVXB1BBWzhX9Cjv0PzRG5OXr5hPjf9hg24ekO2JITnXCMLIdS5K_qwCyZjI_0Q6w1i0Crf5GTJCzj9F_rWDYDJURo/s16000/Digital%20Abhyasika%20Logo.png";
-const HERO_LOGO_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGrS0W_C2fEoxXrGD9yVHhOSlX5uy_gZgATDGGFEKQMvAdczkaY8odZof1-WHMQbOTiACJ1zRGLmw6vn4jpXboQJ1Te52ep9ngIfBVXB1BBWzhX9Cjv0PzRG5OXr5hPjf9hg24ekO2JITnXCMLIdS5K_qwCyZjI_0Q6w1i0Crf5GTJCzj9F_rWDYDJURo/s16000/Digital%20Abhyasika%20Logo.png";
+const LOGO_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh_Y56WdBxrCloSgXFwUGPI96xrDhH3pNHoLDAaltDDvg-5QQe7LflPvxcAvE4hyphenhyphen_hqimXuJy4V4DsIo2rKtKnkOEDY3JRVgHKpnZJunLs6d9ilffrMMXhZzAz-Xp5pWibseXWrwysTt_iKBrlpBAdaL6RcTgKirVRPAIHvoEZaigtS6iB44OH7xsjfFwk/s16000/Digital%20Abhyasika%20Logo%20Borderd.png";
+const HERO_LOGO_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh_Y56WdBxrCloSgXFwUGPI96xrDhH3pNHoLDAaltDDvg-5QQe7LflPvxcAvE4hyphenhyphen_hqimXuJy4V4DsIo2rKtKnkOEDY3JRVgHKpnZJunLs6d9ilffrMMXhZzAz-Xp5pWibseXWrwysTt_iKBrlpBAdaL6RcTgKirVRPAIHvoEZaigtS6iB44OH7xsjfFwk/s16000/Digital%20Abhyasika%20Logo%20Borderd.png";
+const LOGIN_BG_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjFZSUauRg9kZY6ng1y4pSumm_Cc_rU8SdEPi57ov3r57zWTZuPRyzBFc38vLf22jkbQHGcgouNargxXrNQfP8OX80PPHgJ6kmfo9ZM0pzirgmqRzZNNWKEAjCz5YJ3Pg3Xfx9Od-hR4J9D6HGzxus6LjXWhlORFD6jeLVgcwoc3CCKOX3ewdGEWdUa3nk/s16000/Login%20Background%20Image.jpg";
+const HERO_BG_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgk19oVKHi6eLVWrNN-A4YccjkHRRwzO3XLRFXOpYCgSza6np27DFj0p-ImUiwZrglS9L28Gt7yCCOiugFtdIfxu2rfbbDtQrF7oFUSMR6hdvHv3d7m3qeDXPmnmlWe41XmTeKuxezV5RJvTaSa_dohKEm2EcI8xMYnMpgZ10VI6ZC2qcihhAp033g-RxY/s16000/Hero%20Section%20Background.jpg";
 
 // --- Components for Landing Page ---
 
@@ -68,71 +72,20 @@ const Typewriter = () => {
   );
 };
 
-// 2. Feature Orbit Animation
-const FeatureOrbit = () => {
-    const features = [
-        { icon: Users, label: "Registration", color: "bg-blue-600" },
-        { icon: LayoutDashboard, label: "Seats Mgmt", color: "bg-green-600" },
-        { icon: IndianRupee, label: "Fees Mgmt", color: "bg-amber-600" },
-        { icon: BellRing, label: "Reminders", color: "bg-red-600" },
-        { icon: Database, label: "Database", color: "bg-purple-600" },
-        { icon: PieChart, label: "Reports", color: "bg-pink-600" },
-        { icon: Receipt, label: "Receipts", color: "bg-indigo-600" },
-        { icon: TrendingUp, label: "Growth", color: "bg-orange-600" },
-    ];
-
-    return (
-        <div className="relative w-[350px] h-[350px] md:w-[450px] md:h-[450px] mx-auto hidden lg:block">
-            {/* Center Core */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-                <div className="w-40 h-40 rounded-full flex flex-col items-center justify-center z-20 relative animate-float overflow-hidden">
-                    <img src={HERO_LOGO_URL} alt="App Logo" className="w-full h-full object-contain" />
-                </div>
-                 {/* Pulse Effect */}
-                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-orange-500 rounded-full opacity-10 animate-ping z-10"></div>
-            </div>
-
-            {/* Orbit Ring */}
-            <div className="absolute inset-0 rounded-full border border-dashed border-slate-300 animate-spin-slow">
-                {features.map((feat, index) => {
-                    // Calculate position on circle
-                    const angle = (index / features.length) * 2 * Math.PI;
-                    const radius = 48; // Percentage
-                    const left = 50 + radius * Math.cos(angle) + '%';
-                    const top = 50 + radius * Math.sin(angle) + '%';
-                    
-                    return (
-                        <div 
-                            key={index}
-                            className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                            style={{ left, top }}
-                        >
-                            {/* Counter rotate to keep text upright */}
-                            <div className="animate-reverse-spin flex flex-col items-center gap-1 hover:scale-110 transition-transform cursor-pointer">
-                                <div className={`${feat.color} text-white p-2.5 rounded-xl shadow-lg border-2 border-white`}>
-                                    <feat.icon className="h-5 w-5" />
-                                </div>
-                                <span className="text-xs font-bold text-slate-700 bg-white/90 px-2 py-0.5 rounded shadow-sm whitespace-nowrap border border-slate-100">
-                                    {feat.label}
-                                </span>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-            
-            {/* Decorative Background Blobs */}
-            <div className="absolute top-10 left-10 w-20 h-20 bg-blue-100 rounded-full blur-xl opacity-60 mix-blend-multiply animate-float" style={{animationDelay: '1s'}}></div>
-            <div className="absolute bottom-10 right-10 w-24 h-24 bg-purple-100 rounded-full blur-xl opacity-60 mix-blend-multiply animate-float" style={{animationDelay: '2s'}}></div>
-        </div>
-    );
-};
-
 // --- Landing Page ---
 export const Landing = () => {
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
   const isPaused = useRef(false);
+
+  const heroFeatures = [
+      { icon: LayoutDashboard, label: "Seats Mgmt", color: "text-blue-600", bg: "bg-white/80 backdrop-blur-sm border-blue-100" },
+      { icon: IndianRupee, label: "Fees Mgmt", color: "text-green-600", bg: "bg-white/80 backdrop-blur-sm border-green-100" },
+      { icon: BellRing, label: "Reminders", color: "text-red-600", bg: "bg-white/80 backdrop-blur-sm border-red-100" },
+      { icon: Database, label: "Cloud Data", color: "text-purple-600", bg: "bg-white/80 backdrop-blur-sm border-purple-100" },
+      { icon: Receipt, label: "Receipts", color: "text-indigo-600", bg: "bg-white/80 backdrop-blur-sm border-indigo-100" },
+      { icon: TrendingUp, label: "Reports", color: "text-orange-600", bg: "bg-white/80 backdrop-blur-sm border-orange-100" },
+  ];
 
   const testimonials = [
       { text: "सीट रिकामी आहे का नाही हे बघायला आता रजिस्टर शोधावे लागत नाही. डॅशबोर्ड वर लगेच समजते.", name: "Ganesh Shinde", city: "Sadashiv Peth, Pune", role: "Owner, Saraswati Library" },
@@ -179,8 +132,8 @@ export const Landing = () => {
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-primary-100 selection:text-primary-900">
       {/* Navbar */}
-      <header className="fixed w-full bg-[#061525]/95 backdrop-blur-md z-50 border-b border-slate-800 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <header className="fixed w-full bg-[#061525]/95 backdrop-blur-md z-50 border-b border-slate-800 transition-all duration-300 h-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
           <div className="flex items-center gap-3 group cursor-pointer" onClick={() => navigate('/')}>
             <div className="h-16 w-auto flex items-center justify-center">
                 <img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain transition-transform group-hover:scale-105" />
@@ -190,44 +143,50 @@ export const Landing = () => {
           <nav className="hidden md:flex gap-8 text-sm font-medium text-slate-300">
               <a href="#" className="hover:text-white transition-colors">Home</a>
               <a href="#features" className="hover:text-white transition-colors">Features</a>
-              <a href="#reviews" className="hover:text-white transition-colors">Reviews</a>
+              <a href="#testimonials" className="hover:text-white transition-colors">Testimonials</a>
               <a href="#contact" className="hover:text-white transition-colors">Contact</a>
           </nav>
 
           <div className="flex items-center gap-4">
             <Button onClick={() => navigate('/login')} className="shadow-lg shadow-orange-500/20 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 border-none">
-                Login / Admin Access
+                Enter <LogIn className="ml-2 h-4 w-4" />
             </Button>
           </div>
         </div>
       </header>
 
-      <main className="pt-24 overflow-x-hidden">
+      <main className="pt-20 overflow-x-hidden">
         {/* Hero Section */}
-        <div className="relative pb-10 pt-10 lg:pb-20 lg:pt-20">
-           {/* Background Decoration */}
-           <div className="absolute inset-0 -z-10 overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-[600px] bg-gradient-to-b from-orange-50/80 to-transparent"></div>
-              <div className="absolute top-[-100px] right-[-100px] w-[600px] h-[600px] bg-blue-100/30 rounded-full blur-3xl opacity-50 animate-pulse"></div>
-              <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-green-50/30 rounded-full blur-3xl opacity-40"></div>
+        <div className="relative min-h-[550px] lg:min-h-[600px] flex items-center pb-24 pt-10 lg:pt-0 lg:pb-0 isolate">
+           {/* Background Image Container */}
+           <div className="absolute inset-0 -z-10">
+              <img 
+                src={HERO_BG_URL} 
+                alt="Hero Background" 
+                className="w-full h-full object-cover object-center lg:object-[center_top]"
+              />
+              {/* Gradient Overlay - Optimized for text readability on left, visibility on right */}
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-50 via-slate-50/70 to-transparent lg:w-[80%]"></div>
+              {/* Mobile overlay */}
+              <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] lg:hidden"></div>
            </div>
 
-           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-              <div className="flex flex-col lg:flex-row items-center justify-between gap-12">
+           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full h-full">
+              <div className="flex flex-col lg:flex-row items-center lg:items-end justify-between gap-12 lg:h-[500px]">
                   
-                  {/* Left Column: Text */}
-                  <div className="flex-1 text-center lg:text-left space-y-8 animate-fade-in-up">
+                  {/* Left Column: Text - Strictly constrained width */}
+                  <div className="flex-1 text-center lg:text-left space-y-8 animate-fade-in-up lg:max-w-xl xl:max-w-2xl lg:pb-12">
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 border border-orange-200 text-orange-800 text-sm font-bold mb-2 shadow-sm">
                          <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>
                          Maharashtra's #1 Choice
                       </div>
 
-                      <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
+                      <h1 className="text-4xl md:text-5xl lg:text-7xl font-extrabold text-slate-900 tracking-tight leading-[1.1] drop-shadow-sm">
                         Automate Your <br/>
                         <Typewriter />
                       </h1>
                       
-                      <p className="text-xl text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+                      <p className="text-lg md:text-xl text-slate-700 max-w-lg mx-auto lg:mx-0 leading-relaxed font-medium">
                         Say goodbye to registers and Excel sheets. Manage admissions, fees, and seat allocation from your phone with zero effort.
                       </p>
                       
@@ -235,20 +194,39 @@ export const Landing = () => {
                          <Button size="lg" onClick={() => navigate('/login')} className="w-full sm:w-auto px-8 h-14 text-lg bg-orange-600 hover:bg-orange-700 shadow-xl shadow-orange-600/20 hover:translate-y-[-2px] transition-transform">
                            Get Started Now <ArrowRight className="ml-2 h-5 w-5" />
                          </Button>
-                      </div>
-                      
-                      <div className="flex items-center justify-center lg:justify-start gap-6 text-sm text-slate-500 font-medium pt-4">
-                          <span className="flex items-center gap-1"><ShieldCheck className="h-4 w-4 text-green-600" /> Secure Data</span>
-                          <span className="flex items-center gap-1"><Users className="h-4 w-4 text-blue-600" /> Unlimited Students</span>
-                          <span className="flex items-center gap-1"><IndianRupee className="h-4 w-4 text-orange-600" /> Affordable</span>
+                         <div className="hidden sm:flex items-center gap-4 text-sm font-bold text-slate-600">
+                             <span className="flex items-center gap-1"><ShieldCheck className="h-4 w-4 text-green-600" /> Secure</span>
+                             <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                             <span className="flex items-center gap-1"><Users className="h-4 w-4 text-blue-600" /> Scalable</span>
+                         </div>
                       </div>
                   </div>
 
-                  {/* Right Column: Orbit Animation */}
-                  <div className="flex-1 w-full flex justify-center lg:justify-end">
-                      <FeatureOrbit />
+                  {/* Right Column: Features Grid - Aligned Bottom Right */}
+                  <div className="hidden lg:flex lg:flex-1 flex-col justify-end items-end pb-12 w-full animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                      <div className="w-full max-w-md">
+                          <p className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4 text-right pr-2 drop-shadow-sm">Everything you need</p>
+                          <div className="grid grid-cols-2 gap-3">
+                              {heroFeatures.map((feat, idx) => (
+                                  <div key={idx} className={`flex items-center gap-3 p-3 rounded-xl border shadow-sm transition-transform hover:scale-105 ${feat.bg}`}>
+                                      <feat.icon className={`h-5 w-5 ${feat.color}`} />
+                                      <span className="text-xs font-bold text-slate-800">{feat.label}</span>
+                                  </div>
+                              ))}
+                          </div>
+                      </div>
                   </div>
               </div>
+           </div>
+
+           {/* Scroll Down Arrow */}
+           <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20">
+               <div 
+                 className="cursor-pointer animate-bounce bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-lg border border-slate-200 hover:bg-white transition-colors"
+                 onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
+               >
+                   <ArrowDown className="h-5 w-5 text-orange-600" />
+               </div>
            </div>
         </div>
 
@@ -376,7 +354,7 @@ export const Landing = () => {
         </div>
 
         {/* Auto Slider Testimonials (Not Marquee) */}
-        <div id="reviews" className="bg-slate-900 py-20 overflow-hidden relative border-y border-slate-800">
+        <div id="testimonials" className="bg-slate-900 py-20 overflow-hidden relative border-y border-slate-800">
             {/* Background Glow */}
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-900/20 rounded-full blur-[100px]"></div>
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-900/20 rounded-full blur-[100px]"></div>
@@ -446,7 +424,7 @@ export const Landing = () => {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-slate-900">Email Us</h4>
-                                    <p className="text-slate-500">support@digitalabhyasika.com</p>
+                                    <p className="text-slate-500">nishatechx@gmail.com</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-4">
@@ -455,7 +433,7 @@ export const Landing = () => {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-slate-900">Call Us</h4>
-                                    <p className="text-slate-500">+91 99999 99999</p>
+                                    <p className="text-slate-500">+91 9699658462</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-4">
@@ -464,7 +442,7 @@ export const Landing = () => {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-slate-900">Office</h4>
-                                    <p className="text-slate-500">Pune, Maharashtra, India</p>
+                                    <p className="text-slate-500">Nisha Tech Solutions,<br/>Civil Lines, Washim - 444505.</p>
                                 </div>
                             </div>
                         </div>
@@ -513,16 +491,16 @@ export const Landing = () => {
                 </div>
                 <div className="flex gap-6 text-sm font-medium">
                     <a href="#features" className="hover:text-white transition-colors">Features</a>
-                    <a href="#reviews" className="hover:text-white transition-colors">Reviews</a>
+                    <a href="#testimonials" className="hover:text-white transition-colors">Testimonials</a>
                     <a href="#contact" className="hover:text-white transition-colors">Contact</a>
                 </div>
             </div>
             <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-center items-center text-sm">
                 <div className="text-center w-full">
                     <p className="text-white font-medium mb-1">
-                        Powered by <a href="https://www.nishatech.in" target="_blank" className="text-orange-500 hover:text-orange-400 transition-colors">Nish Tech</a>
+                        Powered by Nish Tech Solutions
                     </p>
-                    <p className="opacity-60">© 2024 All Rights Reserved.</p>
+                    <p className="opacity-60">© 2026 All Rights Reserved.</p>
                 </div>
             </div>
         </div>
@@ -531,14 +509,12 @@ export const Landing = () => {
   );
 };
 
-// --- Login Page (Standard) ---
+// --- Login Page (Glassmorphism) ---
 export const Login = ({ onLogin }: { onLogin: (u: any) => void }) => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [successUser, setSuccessUser] = useState<any>(null);
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -546,18 +522,9 @@ export const Login = ({ onLogin }: { onLogin: (u: any) => void }) => {
     setLoading(true);
     try {
         const user = await Store.login(email, password, false);
-        
-        // Success Logic
-        setSuccessUser(user);
-        setShowSuccess(true);
-        
-        // Delay Navigation to show animation
-        setTimeout(() => {
-            onLogin(user);
-            const profile = Store.getProfile();
-            navigate(profile ? '/dashboard' : '/onboarding');
-        }, 2200);
-
+        onLogin(user);
+        const profile = Store.getProfile();
+        navigate(profile ? '/dashboard' : '/onboarding');
     } catch (e: any) {
         setLoading(false); 
         if (e.message === 'EMAIL_NOT_VERIFIED') {
@@ -568,106 +535,60 @@ export const Login = ({ onLogin }: { onLogin: (u: any) => void }) => {
     }
   };
 
-  const handleResend = async () => {
-      setLoading(true);
-      setError('');
-      try {
-          await Store.resendVerification(email, password);
-          alert("Verification email sent! Please check your inbox (and spam folder).");
-          setError("Verification email sent! Please check your inbox (and spam folder).");
-      } catch(e: any) {
-          setError("Failed to resend: " + e.message);
-      } finally {
-          setLoading(false);
-      }
-  };
-
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      
-      {/* SUCCESS ANIMATION OVERLAY */}
-      {showSuccess && (
-        <div className="fixed inset-0 z-[60] bg-[#061525] flex flex-col items-center justify-center animate-fade-in-up">
-            <div className="scale-150 mb-8 p-4 rounded-full bg-green-500/10 border-4 border-green-500/30 shadow-[0_0_50px_rgba(34,197,94,0.4)]">
-                <CheckCircle className="h-16 w-16 text-green-500 animate-bounce" />
-            </div>
-            <h2 className="text-4xl font-extrabold text-white tracking-tight mb-2">Welcome Back</h2>
-            <p className="text-xl text-slate-400 font-medium">{successUser?.displayName || 'Admin'}</p>
-            
-            <div className="mt-12 flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-[bounce_1s_infinite_0ms]"></div>
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-[bounce_1s_infinite_200ms]"></div>
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-[bounce_1s_infinite_400ms]"></div>
-            </div>
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+        {/* Background Image */}
+        <div 
+            className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
+            style={{ 
+                backgroundImage: `url('${LOGIN_BG_URL}')`,
+            }}
+        >
+            {/* Dark Overlay for better contrast */}
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
         </div>
-      )}
 
-      {/* Back Button (Top Left) */}
-      <button 
-        onClick={() => navigate('/')} 
-        className="absolute top-6 left-6 z-20 flex items-center gap-2 text-slate-400 hover:text-white transition-colors font-medium"
-      >
-        <ArrowLeft className="h-5 w-5" /> Back to Home
-      </button>
+      <div className="relative z-10 w-full max-w-sm p-8 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl animate-fade-in-up">
+        <div className="text-center mb-8">
+            <img src={HERO_LOGO_URL} className="h-12 w-auto mx-auto mb-6 drop-shadow-md" alt="Logo" />
+        </div>
 
-      {/* Background decoration */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-          <div className="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] bg-blue-900/20 rounded-full blur-3xl opacity-50 animate-float"></div>
-          <div className="absolute bottom-[0%] left-[0%] w-[400px] h-[400px] bg-orange-900/20 rounded-full blur-3xl opacity-50 animate-float" style={{animationDelay: '1.5s'}}></div>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="bg-[#061525] py-10 px-6 shadow-2xl shadow-black/50 sm:rounded-2xl sm:px-10 border border-slate-800">
-          
-          {/* Logo Section - No Background Container */}
-          <div className="flex justify-center mb-8">
-            <div className="h-32 w-auto flex items-center justify-center">
-              <img src={HERO_LOGO_URL} className="h-full w-auto object-contain" alt="App Logo" />
-            </div>
-          </div>
-
-          <div className="space-y-6">
-            <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">Username / Email</label>
+        <form onSubmit={(e) => { e.preventDefault(); handleLogin(); }} className="space-y-5">
+            <div className="space-y-1">
                 <input 
-                    className="flex h-11 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
+                    type="text"
+                    placeholder="Username or Email"
+                    className="w-full h-12 px-4 bg-white/80 border border-white/30 rounded-xl text-slate-900 placeholder:text-slate-500 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all shadow-inner"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
                 />
             </div>
-            <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">Password</label>
+            <div className="space-y-1">
                 <input 
                     type="password"
-                    className="flex h-11 w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
-                    value={password} 
-                    onChange={(e) => setPassword(e.target.value)} 
+                    placeholder="Password"
+                    className="w-full h-12 px-4 bg-white/80 border border-white/30 rounded-xl text-slate-900 placeholder:text-slate-500 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-orange-500 transition-all shadow-inner"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
                 />
             </div>
-            
+
             {error && (
-                <div className="text-red-400 text-sm font-bold bg-red-900/20 p-3 rounded border border-red-900/50 break-words">
+                <div className="text-xs font-bold text-red-100 bg-red-500/50 p-3 rounded-lg border border-red-500/50 text-center backdrop-blur-sm">
                     {error}
-                    {error.includes("not verified") && (
-                        <button onClick={handleResend} className="mt-2 text-xs text-red-300 hover:text-white underline">
-                            Resend Verification Email
-                        </button>
-                    )}
                 </div>
             )}
 
-            <Button className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-500 hover:to-orange-600 text-white font-bold h-12 shadow-lg shadow-orange-900/20 border-none" onClick={handleLogin} isLoading={loading}>Sign In</Button>
+            <Button className="w-full h-12 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-900/20 border border-orange-500/50" isLoading={loading}>
+                Sign In
+            </Button>
+        </form>
 
-            <div className="text-center mt-6 pt-4 border-t border-slate-800">
-                <button onClick={() => navigate('/')} className="text-sm text-slate-500 hover:text-white font-medium transition-colors">
-                    ← Back to Landing Page
-                </button>
-            </div>
-          </div>
+        <div className="mt-8 text-center">
+            <button onClick={() => navigate('/')} className="text-xs font-bold text-white/70 hover:text-white transition-colors flex items-center justify-center gap-1 mx-auto">
+                <ArrowLeft className="h-3 w-3" /> Back
+            </button>
         </div>
-        <p className="mt-8 text-center text-xs text-slate-600">
-             By signing in, you agree to our Terms of Service and Privacy Policy.
-        </p>
       </div>
     </div>
   );
@@ -676,7 +597,6 @@ export const Login = ({ onLogin }: { onLogin: (u: any) => void }) => {
 // --- Onboarding Page ---
 export const Onboarding = () => {
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
   const [data, setData] = useState<Partial<LibraryProfile>>({ totalSeats: 50 });
 
   const handleSave = async () => {
