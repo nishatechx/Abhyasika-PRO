@@ -816,7 +816,21 @@ export const Reports = () => {
                 <Card title="Inventory Capacity" className="min-h-[300px]">
                     <div className="h-64">
                         <ResponsiveContainer width="100%" height="100%">
-                            <RePieChart><Pie data={[{name: 'Occupied', value: occupied}, {name: 'Empty', value: available}]} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value"><Cell fill="#10b981"/><Cell fill="#e2e8f0"/></RePieChart>
+                            <RePieChart>
+                                <Pie 
+                                    data={[{name: 'Occupied', value: occupied}, {name: 'Empty', value: available}]} 
+                                    cx="50%" 
+                                    cy="50%" 
+                                    innerRadius={60} 
+                                    outerRadius={80} 
+                                    paddingAngle={5} 
+                                    dataKey="value"
+                                >
+                                    <Cell fill="#10b981"/>
+                                    <Cell fill="#e2e8f0"/>
+                                </Pie>
+                                <Tooltip />
+                            </RePieChart>
                         </ResponsiveContainer>
                     </div>
                 </Card>
