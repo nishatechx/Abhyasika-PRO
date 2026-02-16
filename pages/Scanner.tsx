@@ -108,6 +108,29 @@ export const Scanner = () => {
     return () => clearTimeout(t);
   }, [selectedCameraId]);
 
+  const playBeep = () => {
+        try {
+            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            if (!AudioContext) return;
+            
+            const audioCtx = new AudioContext();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime); 
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); 
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.15);
+        } catch(e) {
+            console.error("Audio beep failed", e);
+        }
+  };
+
   const handleScan = async (decodedText: string) => {
       const now = Date.now();
       
@@ -128,6 +151,8 @@ export const Scanner = () => {
       let resultItem: ScanHistoryItem;
 
       if (student) {
+          playBeep(); // Beep Effect
+          
           // Check latest status from store (or calculate toggle)
           const today = format(new Date(), 'yyyy-MM-dd');
           const allRecords = Store.getAttendance();
@@ -153,11 +178,6 @@ export const Scanner = () => {
               type: 'success',
               photoUrl: student.photoUrl
           };
-
-          // Play Beep (Best effort)
-          try {
-             // const audio = new Audio('/beep.mp3'); audio.play();
-          } catch(e){}
 
       } else {
           resultItem = {

@@ -6,7 +6,7 @@ import { Layout } from './components/Layout';
 import { Landing, Login, Onboarding } from './pages/Public';
 import { Dashboard } from './pages/Dashboard';
 import { SeatManager } from './pages/SeatManager';
-import { Students, Finance, Enquiries, Settings, AttendanceHistory } from './pages/Operations';
+import { Students, Finance, Enquiries, Settings, AttendanceHistory, Reports } from './pages/Operations';
 import { SuperAdmin } from './pages/SuperAdmin';
 import { Scanner } from './pages/Scanner';
 import { User } from './types';
@@ -63,6 +63,9 @@ function App() {
         } />
          <Route path="/enquiries" element={
           user && user.role !== 'SUPER_ADMIN' ? <Layout user={user} setUser={setUser}><Enquiries /></Layout> : <Navigate to="/login" />
+        } />
+        <Route path="/reports" element={
+          user && user.role !== 'SUPER_ADMIN' ? <Layout user={user} setUser={setUser}><Reports /></Layout> : <Navigate to="/login" />
         } />
          <Route path="/settings" element={
           user && user.role !== 'SUPER_ADMIN' ? <Layout user={user} setUser={setUser}><Settings /></Layout> : <Navigate to="/login" />

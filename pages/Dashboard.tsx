@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Store } from '../services/store';
 import { StatCard, Card, Badge, Button, Modal, Input } from '../components/ui';
-import { Users, Armchair, IndianRupee, AlertCircle, UserPlus, Wallet, ClipboardCheck, Search, Clock, Camera, List, X, ScanLine, QrCode, ArrowLeft, RefreshCw, CheckCircle } from 'lucide-react';
+import { Users, Armchair, IndianRupee, AlertCircle, UserPlus, Wallet, ClipboardCheck, Search, Clock, Camera, ScanLine, ArrowLeft, RefreshCw, CheckCircle, QrCode } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Student, Seat, Attendance } from '../types';
 import { format } from 'date-fns';
@@ -23,18 +23,15 @@ const ScannerOverlay = ({ onClose }: { onClose: () => void }) => {
     useEffect(() => {
         const timer = setInterval(() => setTime(new Date()), 1000);
         
-        // Initialize Cameras
         Html5Qrcode.getCameras().then((devices) => {
             if (devices && devices.length) {
                 setCameras(devices);
-                // Default to last camera (usually back camera)
                 setSelectedCameraId(devices[devices.length - 1].id);
             }
         }).catch(err => console.error("Camera Error", err));
 
         return () => {
             clearInterval(timer);
-            // Robust cleanup
             if (scannerRef.current) {
                 const scanner = scannerRef.current;
                 if (scanner.isScanning) {
@@ -48,12 +45,10 @@ const ScannerOverlay = ({ onClose }: { onClose: () => void }) => {
         };
     }, []);
 
-    // Start/Restart Scanner when camera changes
     useEffect(() => {
         if (!selectedCameraId) return;
 
         const startScanner = async () => {
-            // 1. Cleanup existing instance properly
             if (scannerRef.current) {
                 try {
                     if (scannerRef.current.isScanning) {
@@ -64,9 +59,6 @@ const ScannerOverlay = ({ onClose }: { onClose: () => void }) => {
                     console.warn("Failed to clear previous scanner", e);
                 }
             }
-
-            // 2. Create new instance
-            // Ensure element exists
             if(!document.getElementById("reader-overlay")) return;
 
             const html5QrCode = new Html5Qrcode("reader-overlay");
@@ -95,27 +87,38 @@ const ScannerOverlay = ({ onClose }: { onClose: () => void }) => {
         return () => clearTimeout(t);
     }, [selectedCameraId]);
 
+    const playBeep = () => {
+        try {
+            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            if (!AudioContext) return;
+            const audioCtx = new AudioContext();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime); 
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); 
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 0.15);
+        } catch(e) { console.error("Audio beep failed", e); }
+    };
+
     const handleScan = async (decodedText: string) => {
         if (isProcessingRef.current) return;
         isProcessingRef.current = true;
-        
-        if (scannerRef.current && scannerRef.current.isScanning) {
-            scannerRef.current.pause();
-        }
-
-        // 1. Process Code
+        if (scannerRef.current && scannerRef.current.isScanning) scannerRef.current.pause();
         const parts = decodedText.split('|');
         const studentId = parts[0];
         const students = Store.getStudents();
         const student = students.find(s => s.id === studentId);
 
         if (student) {
-            // 2. Logic
+            playBeep();
             const today = format(new Date(), 'yyyy-MM-dd');
             const records = Store.getAttendance();
             const lastRecord = records.find(r => r.studentId === studentId && r.date === today);
             const newStatus = lastRecord?.status === 'IN' ? 'OUT' : 'IN';
-
             const record: Attendance = {
                 id: `att-${Date.now()}`,
                 studentId: student.id,
@@ -125,18 +128,11 @@ const ScannerOverlay = ({ onClose }: { onClose: () => void }) => {
                 status: newStatus
             };
             await Store.addAttendance(record);
-
-            setScanResult({
-                msg: `Marked ${newStatus}`,
-                type: 'success',
-                student,
-                status: newStatus
-            });
+            setScanResult({ msg: `Marked ${newStatus}`, type: 'success', student, status: newStatus });
         } else {
             setScanResult({ msg: 'Invalid ID Card', type: 'error' });
         }
 
-        // 3. Resume
         setTimeout(() => {
             setScanResult(null);
             isProcessingRef.current = false;
@@ -147,89 +143,80 @@ const ScannerOverlay = ({ onClose }: { onClose: () => void }) => {
     };
 
     return (
-        <div className="fixed inset-0 z-50 bg-slate-900 flex flex-col text-white animate-zoom-in">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 bg-slate-800 border-b border-slate-700 shadow-md">
-                <div className="flex items-center gap-4">
-                    <button onClick={onClose} className="p-2 hover:bg-slate-700 rounded-full transition-colors">
+        <div className="fixed inset-0 z-[60] bg-slate-900 flex flex-col text-white animate-zoom-in">
+            <div className="flex items-center justify-between p-4 bg-slate-800 border-b border-slate-700 shadow-md sticky top-0">
+                <div className="flex items-center gap-3">
+                    <button onClick={onClose} className="p-2 hover:bg-slate-700 rounded-full transition-colors active:scale-95">
                         <ArrowLeft className="h-6 w-6 text-slate-400" />
                     </button>
                     <div>
-                        <h2 className="text-xl font-bold flex items-center gap-2">
-                            <ScanLine className="text-green-500 animate-pulse"/> Attendance Scanner
+                        <h2 className="text-lg font-bold flex items-center gap-2">
+                            <ScanLine className="text-green-500 animate-pulse h-5 w-5"/> Scanner
                         </h2>
-                        <p className="text-xs text-slate-400">Ready to Scan</p>
+                        <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">In/Out Terminal</p>
                     </div>
                 </div>
-                <div className="text-right hidden sm:block">
-                    <div className="text-2xl font-mono font-bold text-green-400">{format(time, 'hh:mm:ss a')}</div>
-                    <div className="text-xs text-slate-500">{format(time, 'EEEE, dd MMMM yyyy')}</div>
+                <div className="text-right">
+                    <div className="text-xl font-mono font-bold text-green-400 leading-none">{format(time, 'hh:mm:ss a')}</div>
                 </div>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 flex flex-col items-center justify-center p-6 gap-8">
-                {/* Scanner Frame */}
-                <div className="relative w-full max-w-md aspect-square bg-black rounded-2xl overflow-hidden shadow-2xl border-4 border-slate-700">
+            <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 gap-6 overflow-y-auto">
+                <div className="relative w-full max-w-sm aspect-square bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-slate-700/50">
                     <div id="reader-overlay" className="w-full h-full"></div>
-                    
-                    {/* Green Laser Animation */}
                     {isScanningState && !scanResult && (
                         <>
-                            <div className="absolute top-0 left-0 w-full h-1 bg-green-500 shadow-[0_0_20px_rgba(34,197,94,1)] z-10 animate-scan"></div>
-                            {/* Corners */}
-                            <div className="absolute top-4 left-4 w-12 h-12 border-t-4 border-l-4 border-green-500 rounded-tl-lg z-20"></div>
-                            <div className="absolute top-4 right-4 w-12 h-12 border-t-4 border-r-4 border-green-500 rounded-tr-lg z-20"></div>
-                            <div className="absolute bottom-4 left-4 w-12 h-12 border-b-4 border-l-4 border-green-500 rounded-bl-lg z-20"></div>
-                            <div className="absolute bottom-4 right-4 w-12 h-12 border-b-4 border-r-4 border-green-500 rounded-br-lg z-20"></div>
+                            <div className="absolute top-0 left-0 w-full h-1 bg-green-500 shadow-[0_0_25px_rgba(34,197,94,1)] z-10 animate-scan"></div>
+                            <div className="absolute top-6 left-6 w-12 h-12 border-t-4 border-l-4 border-green-500 rounded-tl-xl z-20 opacity-80"></div>
+                            <div className="absolute top-6 right-6 w-12 h-12 border-t-4 border-r-4 border-green-500 rounded-tr-xl z-20 opacity-80"></div>
+                            <div className="absolute bottom-6 left-6 w-12 h-12 border-b-4 border-l-4 border-green-500 rounded-bl-xl z-20 opacity-80"></div>
+                            <div className="absolute bottom-6 right-6 w-12 h-12 border-b-4 border-r-4 border-green-500 rounded-br-xl z-20 opacity-80"></div>
                         </>
                     )}
-
-                    {/* Result Overlay */}
                     {scanResult && (
-                        <div className="absolute inset-0 bg-slate-900/95 z-30 flex flex-col items-center justify-center p-6 animate-zoom-in text-center">
+                        <div className="absolute inset-0 bg-slate-900/98 z-30 flex flex-col items-center justify-center p-6 animate-zoom-in text-center">
                             {scanResult.type === 'success' ? (
                                 <>
-                                    <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-4 shadow-lg shadow-green-900/50">
-                                        <CheckCircle className="h-10 w-10 text-white" />
+                                    <div className="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center mb-6 shadow-lg shadow-green-900/40 transform scale-110">
+                                        <CheckCircle className="h-12 w-12 text-white" />
                                     </div>
-                                    <h3 className="text-2xl font-bold text-white mb-1">{scanResult.student?.fullName}</h3>
-                                    <div className="text-green-400 text-xl font-bold uppercase tracking-widest mb-4">
+                                    <h3 className="text-2xl font-bold text-white mb-2 leading-tight">{scanResult.student?.fullName}</h3>
+                                    <div className={`text-xl font-extrabold uppercase tracking-[0.2em] mb-4 ${scanResult.status === 'IN' ? 'text-green-400' : 'text-orange-400'}`}>
                                         Marked {scanResult.status}
                                     </div>
-                                    <p className="text-slate-500 text-sm">
-                                        Seat: {scanResult.student?.seatId || 'N/A'} • {format(new Date(), 'hh:mm a')}
+                                    <p className="text-slate-500 text-xs font-medium uppercase tracking-widest">
+                                        Time: {format(new Date(), 'hh:mm a')}
                                     </p>
                                 </>
                             ) : (
                                 <>
-                                    <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mb-4">
-                                        <AlertCircle className="h-8 w-8 text-white" />
+                                    <div className="w-20 h-20 bg-red-500/20 border-2 border-red-500 rounded-full flex items-center justify-center mb-6">
+                                        <AlertCircle className="h-10 w-10 text-red-500" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-white">Scan Failed</h3>
-                                    <p className="text-slate-400 mt-2">{scanResult.msg}</p>
+                                    <h3 className="text-xl font-bold text-white mb-2">Scan Failed</h3>
+                                    <p className="text-red-400 text-sm font-medium">{scanResult.msg}</p>
                                 </>
                             )}
                         </div>
                     )}
                 </div>
 
-                {/* Camera Selector */}
-                <div className="w-full max-w-md bg-slate-800 p-4 rounded-xl border border-slate-700">
-                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block flex items-center gap-2">
-                        <Camera className="h-3 w-3" /> Select Camera
-                    </label>
+                <div className="w-full max-w-sm bg-slate-800/80 backdrop-blur-sm p-5 rounded-2xl border border-slate-700/50 shadow-lg">
+                    <div className="flex items-center gap-2 mb-3">
+                         <Camera className="h-4 w-4 text-primary-400" />
+                         <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Hardware Interface</label>
+                    </div>
                     <div className="relative">
                         <select 
-                            className="w-full bg-slate-900 text-white border border-slate-600 rounded-lg p-3 appearance-none focus:ring-2 focus:ring-green-500 outline-none"
+                            className="w-full bg-slate-900/80 text-white border border-slate-600 rounded-xl p-3.5 text-sm appearance-none focus:ring-2 focus:ring-primary-500 outline-none transition-all"
                             value={selectedCameraId}
                             onChange={(e) => setSelectedCameraId(e.target.value)}
                         >
                             {cameras.map(cam => (
-                                <option key={cam.id} value={cam.id}>{cam.label || `Camera ${cam.id.slice(0,5)}`}</option>
+                                <option key={cam.id} value={cam.id}>{cam.label || `Lense ${cam.id.slice(0,5)}`}</option>
                             ))}
                         </select>
-                        <RefreshCw className="absolute right-3 top-3.5 h-4 w-4 text-slate-400 pointer-events-none" />
+                        <RefreshCw className="absolute right-4 top-4 h-4 w-4 text-slate-500 pointer-events-none" />
                     </div>
                 </div>
             </div>
@@ -248,9 +235,7 @@ export const Dashboard = () => {
   });
   const [seats, setSeats] = useState<Seat[]>([]);
   const [recentJoiners, setRecentJoiners] = useState<Student[]>([]);
-  const [time, setTime] = useState(new Date());
 
-  // View States
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isManualAttendanceOpen, setIsManualAttendanceOpen] = useState(false);
   
@@ -263,28 +248,17 @@ export const Dashboard = () => {
     const seatsData = Store.getSeats();
     const payments = Store.getPayments();
     
-    // Calculate stats
     const totalSeats = seatsData.length;
     const occupiedSeats = seatsData.filter(s => s.status === 'OCCUPIED').length;
     const totalDues = studentsData.reduce((acc, s) => acc + (s.dues || 0), 0);
     const monthlyCollection = payments.reduce((acc, p) => acc + p.amount, 0);
 
-    setStats({
-      totalStudents: studentsData.length,
-      occupiedSeats,
-      totalSeats,
-      monthlyCollection,
-      totalDues
-    });
+    setStats({ totalStudents: studentsData.length, occupiedSeats, totalSeats, monthlyCollection, totalDues });
     setSeats(seatsData);
     setStudents(studentsData);
     setRecentJoiners(studentsData.slice(-5).reverse());
     setAttendanceRecords(Store.getAttendance());
-
-    // Clock
-    const interval = setInterval(() => setTime(new Date()), 1000);
-    return () => clearInterval(interval);
-  }, [isManualAttendanceOpen, isScannerOpen]); // Refresh stats when modes close
+  }, [isManualAttendanceOpen, isScannerOpen]);
 
 
   const handleAttendance = async (student: Student, status: 'IN' | 'OUT') => {
@@ -297,7 +271,7 @@ export const Dashboard = () => {
           status
       };
       await Store.addAttendance(record);
-      setAttendanceRecords(Store.getAttendance()); // Refresh
+      setAttendanceRecords(Store.getAttendance()); 
   };
 
   const getLatestStatus = (studentId: string) => {
@@ -307,68 +281,65 @@ export const Dashboard = () => {
       return records[0]; 
   };
 
-  // Blue for occupied, slate for empty
   const occupancyData = [
     { name: 'Occupied', value: stats.occupiedSeats },
-    { name: 'Available', value: stats.totalSeats - stats.occupiedSeats },
+    { name: 'Available', value: Math.max(0, stats.totalSeats - stats.occupiedSeats) },
   ];
-  const COLORS = ['#1D4ED8', '#e2e8f0']; // Blue-700, Slate-200
+  const COLORS = ['#1D4ED8', '#e2e8f0']; 
 
   const filteredStudents = students.filter(s => 
       s.fullName.toLowerCase().includes(searchQuery.toLowerCase()) || 
       s.mobile.includes(searchQuery)
   );
 
-  // --- RENDER SCANNER OVERLAY IF ACTIVE ---
   if (isScannerOpen) {
       return <ScannerOverlay onClose={() => setIsScannerOpen(false)} />;
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-           <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-           <p className="text-slate-500">Welcome back, here's what's happening today.</p>
-        </div>
-        <div className="flex items-center gap-3">
-             <div className="bg-white px-4 py-2 rounded-lg shadow-sm border border-slate-200 font-mono text-lg font-semibold text-slate-700 hidden md:block">
-                {format(time, 'hh:mm:ss a')}
-             </div>
-        </div>
-      </div>
+    <div className="space-y-6 sm:space-y-8 animate-fade-in-up">
       
-      {/* Quick Actions */}
-      <div className="flex flex-wrap gap-4">
-          <Button icon={UserPlus} onClick={() => navigate('/students', { state: { openAdmission: true } })} className="shadow-md shadow-primary-700/20">
-              Add Candidate
+      {/* Quick Actions - Super Responsive Wrap */}
+      <div className="flex flex-wrap gap-3 sm:gap-4 mt-2">
+          <Button icon={UserPlus} onClick={() => navigate('/students', { state: { openAdmission: true } })} className="flex-1 sm:flex-none shadow-lg shadow-primary-700/20 py-5 sm:py-2 px-6">
+              Admission
           </Button>
-          <Button variant="secondary" icon={Wallet} onClick={() => navigate('/finance', { state: { openCollection: true } })}>
-              Collect Fees
+          <Button variant="secondary" icon={Wallet} onClick={() => navigate('/finance', { state: { openCollection: true } })} className="flex-1 sm:flex-none py-5 sm:py-2 px-6">
+              Collect
           </Button>
           <Button 
-            variant="accent" // Accent Orange
+            variant="accent" 
             icon={QrCode} 
             onClick={() => setIsScannerOpen(true)} 
-            className="shadow-md shadow-accent-500/20"
+            className="w-full sm:w-auto shadow-lg shadow-accent-500/20 py-5 sm:py-2 px-6"
           >
               Mark Attendance
           </Button>
-          <Button variant="outline" icon={ClipboardCheck} onClick={() => setIsManualAttendanceOpen(true)} className="bg-white hover:bg-slate-50">
-              Manual Attendance
+          <Button variant="outline" icon={ClipboardCheck} onClick={() => setIsManualAttendanceOpen(true)} className="w-full sm:w-auto bg-white hover:bg-slate-50 border-slate-200 py-5 sm:py-2 px-6">
+              Manual Log
           </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard label="Total Students" value={stats.totalStudents} icon={Users} trend="+2 this week" trendUp color="blue" />
-        <StatCard label="Occupancy" value={`${stats.occupiedSeats}/${stats.totalSeats}`} icon={Armchair} color="green" />
-        <StatCard label="Total Dues" value={`₹${stats.totalDues}`} icon={AlertCircle} trend="Action needed" color="tomato" />
-        <StatCard label="Collections" value={`₹${stats.monthlyCollection}`} icon={IndianRupee} trend="+12% vs last month" trendUp color="orange" />
+      {/* Stats - Column Grid Responsiveness */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div onClick={() => navigate('/students')} className="cursor-pointer active:scale-95 transition-transform">
+            <StatCard label="Total Students" value={stats.totalStudents} icon={Users} color="blue" trend="+2 New Admissions" trendUp />
+        </div>
+        <div onClick={() => navigate('/seats')} className="cursor-pointer active:scale-95 transition-transform">
+            <StatCard label="Occupancy" value={`${stats.occupiedSeats}/${stats.totalSeats}`} icon={Armchair} color="green" trend="Total Seats" trendUp />
+        </div>
+        <div onClick={() => navigate('/students')} className="cursor-pointer active:scale-95 transition-transform">
+            <StatCard label="Total Dues" value={`₹${stats.totalDues}`} icon={AlertCircle} trend="Urgent Collection" color="tomato" />
+        </div>
+        <div onClick={() => navigate('/finance')} className="cursor-pointer active:scale-95 transition-transform">
+            <StatCard label="Collections" value={`₹${stats.monthlyCollection}`} icon={IndianRupee} trend="This Month" trendUp color="orange" />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card title="Seat Utilization" className="col-span-1 min-h-[300px]">
-          <div className="h-64 w-full">
+        {/* Occupancy Card - Height adjusts per screen */}
+        <Card title="Seat Utilization" className="col-span-1 min-h-[350px]">
+          <div className="h-64 sm:h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -377,93 +348,107 @@ export const Dashboard = () => {
                   cy="50%"
                   innerRadius={60}
                   outerRadius={80}
-                  paddingAngle={5}
+                  paddingAngle={8}
                   dataKey="value"
+                  stroke="none"
                 >
                   {occupancyData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex justify-center gap-4 text-sm">
+          <div className="flex justify-center gap-6 text-xs font-bold uppercase tracking-wider text-slate-500 mt-2">
             <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-primary-700"></div> Occupied ({stats.occupiedSeats})
+                <div className="w-3 h-3 rounded-full bg-primary-700 shadow-sm shadow-primary-700/50"></div> Occupied ({stats.occupiedSeats})
             </div>
             <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-slate-200"></div> Available ({stats.totalSeats - stats.occupiedSeats})
+                <div className="w-3 h-3 rounded-full bg-slate-200"></div> Available ({Math.max(0, stats.totalSeats - stats.occupiedSeats)})
             </div>
           </div>
         </Card>
 
-        <Card title="Recent Admissions" className="col-span-1 lg:col-span-2">
-           <div className="overflow-x-auto">
-             <table className="w-full text-left text-sm text-slate-600">
-               <thead className="bg-slate-50 text-xs uppercase font-semibold text-slate-500">
-                 <tr>
-                   <th className="px-4 py-3">Name</th>
-                   <th className="px-4 py-3">Seat</th>
-                   <th className="px-4 py-3">Plan</th>
-                   <th className="px-4 py-3">Status</th>
-                 </tr>
-               </thead>
-               <tbody className="divide-y divide-slate-100">
-                 {recentJoiners.length > 0 ? recentJoiners.map(s => (
-                   <tr key={s.id}>
-                     <td className="px-4 py-3 font-medium text-slate-900">{s.fullName}</td>
-                     <td className="px-4 py-3 text-primary-700 font-bold">{s.seatId || '-'}</td>
-                     <td className="px-4 py-3">{s.planType}</td>
-                     <td className="px-4 py-3">
-                       <Badge variant={s.status === 'ACTIVE' ? 'success' : 'error'}>{s.status}</Badge>
-                     </td>
+        {/* Table - Optimized for overflow */}
+        <Card title="Recent Activity" className="col-span-1 lg:col-span-2 overflow-hidden">
+           <div className="overflow-x-auto -mx-6 sm:mx-0">
+             <div className="inline-block min-w-full align-middle">
+               <table className="min-w-full text-left text-sm text-slate-600">
+                 <thead className="bg-slate-50 text-[10px] uppercase font-extrabold text-slate-400 tracking-widest border-y border-slate-100">
+                   <tr>
+                     <th className="px-6 py-4">Student</th>
+                     <th className="px-6 py-4">Allotted</th>
+                     <th className="px-6 py-4 hidden sm:table-cell">Plan</th>
+                     <th className="px-6 py-4 text-right">Status</th>
                    </tr>
-                 )) : (
-                     <tr><td colSpan={4} className="p-4 text-center">No recent activity</td></tr>
-                 )}
-               </tbody>
-             </table>
+                 </thead>
+                 <tbody className="divide-y divide-slate-100">
+                   {recentJoiners.length > 0 ? recentJoiners.map(s => (
+                     <tr key={s.id} className="hover:bg-slate-50 transition-colors">
+                       <td className="px-6 py-4">
+                           <div className="font-bold text-slate-900">{s.fullName}</div>
+                           <div className="text-[10px] text-slate-400 font-medium sm:hidden">{s.planType}</div>
+                       </td>
+                       <td className="px-6 py-4 text-primary-700 font-extrabold text-sm">{s.seatId || 'NONE'}</td>
+                       <td className="px-6 py-4 hidden sm:table-cell font-medium">{s.planType}</td>
+                       <td className="px-6 py-4 text-right">
+                         <Badge variant={s.status === 'ACTIVE' ? 'success' : 'error'}>{s.status}</Badge>
+                       </td>
+                     </tr>
+                   )) : (
+                       <tr><td colSpan={4} className="p-12 text-center text-slate-400 italic">No recent admissions found</td></tr>
+                   )}
+                 </tbody>
+               </table>
+             </div>
            </div>
         </Card>
       </div>
 
-      {/* Manual Attendance Modal */}
-      <Modal isOpen={isManualAttendanceOpen} onClose={() => setIsManualAttendanceOpen(false)} title="Manual Attendance Log">
-           <div className="flex flex-col h-[70vh] w-full">
+      {/* Manual Attendance Modal - Adaptive Sizing */}
+      <Modal isOpen={isManualAttendanceOpen} onClose={() => setIsManualAttendanceOpen(false)} title="Manual Log Terminal">
+           <div className="flex flex-col h-[75vh] sm:h-[60vh] w-full min-w-0">
                <div className="flex-1 flex flex-col min-h-0">
-                   <div className="relative mb-3 flex-shrink-0">
-                        <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                        <Input className="pl-9" placeholder="Search student..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                   <div className="relative mb-4 flex-shrink-0">
+                        <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+                        <Input className="pl-10 h-11 rounded-xl border-slate-200" placeholder="Search by name/mobile..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                    </div>
                    
-                   <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                   <div className="flex-1 overflow-y-auto space-y-2 pr-1 scrollbar-hide">
                        {filteredStudents.length > 0 ? filteredStudents.map(student => {
                            const lastRecord = getLatestStatus(student.id);
                            const isPresent = lastRecord?.status === 'IN';
 
                            return (
-                               <div key={student.id} className="flex items-center justify-between p-3 bg-white hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors">
-                                   <div>
-                                       <p className="font-medium text-slate-900">{student.fullName}</p>
-                                       <p className="text-xs text-slate-500">{student.seatId ? `Seat: ${student.seatId}` : 'No Seat'}</p>
+                               <div key={student.id} className="flex items-center justify-between p-4 bg-white active:bg-slate-50 rounded-xl border border-slate-200 shadow-xs transition-all">
+                                   <div className="min-w-0 flex-1 mr-4">
+                                       <p className="font-bold text-slate-900 truncate leading-tight">{student.fullName}</p>
+                                       <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-[10px] font-bold text-primary-700 bg-primary-50 px-1.5 py-0.5 rounded border border-primary-100 uppercase">{student.seatId || 'Waitlist'}</span>
+                                            {lastRecord && (
+                                                <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+                                                    <Clock className="h-2.5 w-2.5"/> {lastRecord.time}
+                                                </span>
+                                            )}
+                                       </div>
                                    </div>
-                                   <div className="flex items-center gap-2">
-                                       {lastRecord && (
-                                           <span className="text-xs text-slate-500 flex items-center gap-1 bg-slate-100 px-2 py-1 rounded">
-                                               <Clock className="h-3 w-3"/> {lastRecord.time}
-                                           </span>
-                                       )}
+                                   <div className="flex-shrink-0">
                                        {isPresent ? (
-                                           <Button size="sm" variant="danger" onClick={() => handleAttendance(student, 'OUT')}>Mark OUT</Button>
+                                           <Button size="sm" variant="danger" className="rounded-lg px-4" onClick={() => handleAttendance(student, 'OUT')}>OUT</Button>
                                        ) : (
-                                           <Button size="sm" variant="primary" className="bg-green-600 hover:bg-green-700" onClick={() => handleAttendance(student, 'IN')}>Mark IN</Button>
+                                           <Button size="sm" variant="primary" className="bg-green-600 hover:bg-green-700 rounded-lg px-4" onClick={() => handleAttendance(student, 'IN')}>IN</Button>
                                        )}
                                    </div>
                                </div>
                            );
                        }) : (
-                           <div className="text-center py-6 text-slate-500">No students found</div>
+                           <div className="h-full flex flex-col items-center justify-center text-slate-400">
+                               <Users className="h-10 w-10 mb-2 opacity-10" />
+                               <p className="text-xs font-medium uppercase tracking-widest">No match found</p>
+                           </div>
                        )}
                    </div>
                </div>

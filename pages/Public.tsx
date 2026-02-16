@@ -28,8 +28,8 @@ import {
 } from 'lucide-react';
 import { LibraryProfile } from '../types';
 
-const LOGO_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEioaLqxKHxm_CiO9-ZIkOlt5t90C2zoAOWvuNSWh4uA-kHMC3_rXZJduG5LthPp5tz68BOfxMaVapFdXIgOqurdd9f1GQ1_moTmCm4nYnbFTN8Oskv7AQoNF-yBrAz0v9LUL03XsN7uKzniFGsacozdWUDhDQuohxHYPF50H7Hr245Ha4hVG1mx3jSCbHc/s16000/Smart%20Seat%20Pro.jpg";
-const HERO_LOGO_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEivBtlNjI1vhsixv7i5nl3ewGw0o-Emk_ihCMebA5CWUln3si1I8HZC_GhNaSmUElUUDxspPirLYno-uEfQ3lAIaMe9BStxKITDcBVb6-RRo-FiOZT3sAPixxU5e03jyZwSc3-bcrHNQdbFrLmboDXdXAQJ8-kost0noUnX7LoLy7tI3u-taI3bD-pIV0s/s16000/Smart%20Seat%20Pro.png";
+const LOGO_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGrS0W_C2fEoxXrGD9yVHhOSlX5uy_gZgATDGGFEKQMvAdczkaY8odZof1-WHMQbOTiACJ1zRGLmw6vn4jpXboQJ1Te52ep9ngIfBVXB1BBWzhX9Cjv0PzRG5OXr5hPjf9hg24ekO2JITnXCMLIdS5K_qwCyZjI_0Q6w1i0Crf5GTJCzj9F_rWDYDJURo/s16000/Digital%20Abhyasika%20Logo.png";
+const HERO_LOGO_URL = "https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhGrS0W_C2fEoxXrGD9yVHhOSlX5uy_gZgATDGGFEKQMvAdczkaY8odZof1-WHMQbOTiACJ1zRGLmw6vn4jpXboQJ1Te52ep9ngIfBVXB1BBWzhX9Cjv0PzRG5OXr5hPjf9hg24ekO2JITnXCMLIdS5K_qwCyZjI_0Q6w1i0Crf5GTJCzj9F_rWDYDJURo/s16000/Digital%20Abhyasika%20Logo.png";
 
 // --- Components for Landing Page ---
 
@@ -85,7 +85,7 @@ const FeatureOrbit = () => {
         <div className="relative w-[350px] h-[350px] md:w-[450px] md:h-[450px] mx-auto hidden lg:block">
             {/* Center Core */}
             <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-                <div className="w-40 h-40 bg-white rounded-full shadow-2xl flex flex-col items-center justify-center border-4 border-orange-100 z-20 relative animate-float overflow-hidden p-4">
+                <div className="w-40 h-40 rounded-full flex flex-col items-center justify-center z-20 relative animate-float overflow-hidden">
                     <img src={HERO_LOGO_URL} alt="App Logo" className="w-full h-full object-contain" />
                 </div>
                  {/* Pulse Effect */}
@@ -139,7 +139,7 @@ export const Landing = () => {
       { text: "Software is very easy. My staff learned it in 1 day. Receipts on WhatsApp is a great feature.", name: "Dr. Anjali Patil", city: "Latur", role: "Director, Wisdom Study Circle" },
       { text: "महिन्याच्या शेवटी हिशोब करायला खूप त्रास व्हायचा. आता एका क्लिक वर रिपोर्ट मिळतो.", name: "Suresh Deshmukh", city: "Akola", role: "Manager" },
       { text: "स्टुडंट्स ची फी बाकी असेल तर SMS जातो, त्यामुळे वसुली वेळेवर होते. बेस्ट सॉफ्टवेअर.", name: "Rameshwar Bhau", city: "Parbhani", role: "Owner, Mauli Abhyasika" },
-      { text: "We manage 3 branches in Sambhajinagar using Abhyasika Pro. Centralized data is very helpful.", name: "Vikram Rane", city: "Chhatrapati Sambhajinagar", role: "Founder" },
+      { text: "We manage 3 branches in Sambhajinagar using Digital Abhyasika. Centralized data is very helpful.", name: "Vikram Rane", city: "Chhatrapati Sambhajinagar", role: "Founder" },
       { text: "ग्रामीण भागातील लायब्ररी साठी खूप उपयुक्त. इंटरनेट नसताना पण मोबाइल वर बघता येते.", name: "Kishor Patil", city: "Jalgaon", role: "Owner" },
       { text: "Cost effective solution. Support team speaks Marathi and is very helpful.", name: "Pooja Kulkarni", city: "Nashik", role: "Admin" },
       { text: "Excel maintain करणे बंद केले. आता सगळं काम ऑनलाइन आणि सुरक्षित.", name: "Amit Joshi", city: "Thane", role: "Owner, Focus Point" },
@@ -182,8 +182,8 @@ export const Landing = () => {
       <header className="fixed w-full bg-[#061525]/95 backdrop-blur-md z-50 border-b border-slate-800 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3 group cursor-pointer" onClick={() => navigate('/')}>
-            <div className="h-12 w-auto rounded-lg overflow-hidden bg-[#061525] p-1.5 shadow-sm border border-slate-700">
-                <img src={LOGO_URL} alt="Logo" className="h-full w-auto object-contain transition-transform group-hover:scale-105" />
+            <div className="h-16 w-auto flex items-center justify-center">
+                <img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain transition-transform group-hover:scale-105" />
             </div>
           </div>
           
@@ -446,7 +446,7 @@ export const Landing = () => {
                                 </div>
                                 <div>
                                     <h4 className="font-bold text-slate-900">Email Us</h4>
-                                    <p className="text-slate-500">support@abhyasikapro.com</p>
+                                    <p className="text-slate-500">support@digitalabhyasika.com</p>
                                 </div>
                             </div>
                             <div className="flex items-start gap-4">
@@ -507,8 +507,8 @@ export const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-8">
                 <div className="flex items-center gap-2">
-                    <div className="h-10 w-auto rounded overflow-hidden bg-white p-0.5">
-                        <img src={LOGO_URL} className="h-full w-auto object-contain"/>
+                    <div className="h-10 w-auto flex items-center justify-center">
+                        <img src={LOGO_URL} className="w-full h-full object-contain"/>
                     </div>
                 </div>
                 <div className="flex gap-6 text-sm font-medium">
@@ -537,6 +537,8 @@ export const Login = ({ onLogin }: { onLogin: (u: any) => void }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [successUser, setSuccessUser] = useState<any>(null);
   const navigate = useNavigate();
 
   const handleLogin = async () => {
@@ -544,17 +546,25 @@ export const Login = ({ onLogin }: { onLogin: (u: any) => void }) => {
     setLoading(true);
     try {
         const user = await Store.login(email, password, false);
-        onLogin(user);
-        const profile = Store.getProfile();
-        navigate(profile ? '/dashboard' : '/onboarding');
+        
+        // Success Logic
+        setSuccessUser(user);
+        setShowSuccess(true);
+        
+        // Delay Navigation to show animation
+        setTimeout(() => {
+            onLogin(user);
+            const profile = Store.getProfile();
+            navigate(profile ? '/dashboard' : '/onboarding');
+        }, 2200);
+
     } catch (e: any) {
+        setLoading(false); 
         if (e.message === 'EMAIL_NOT_VERIFIED') {
             setError("Your email is not verified yet. Please check your inbox and click the verification link.");
         } else {
             setError("Invalid credentials. Please check your username and password.");
         }
-    } finally {
-        setLoading(false);
     }
   };
 
@@ -574,6 +584,24 @@ export const Login = ({ onLogin }: { onLogin: (u: any) => void }) => {
 
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
+      
+      {/* SUCCESS ANIMATION OVERLAY */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-[60] bg-[#061525] flex flex-col items-center justify-center animate-fade-in-up">
+            <div className="scale-150 mb-8 p-4 rounded-full bg-green-500/10 border-4 border-green-500/30 shadow-[0_0_50px_rgba(34,197,94,0.4)]">
+                <CheckCircle className="h-16 w-16 text-green-500 animate-bounce" />
+            </div>
+            <h2 className="text-4xl font-extrabold text-white tracking-tight mb-2">Welcome Back</h2>
+            <p className="text-xl text-slate-400 font-medium">{successUser?.displayName || 'Admin'}</p>
+            
+            <div className="mt-12 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-[bounce_1s_infinite_0ms]"></div>
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-[bounce_1s_infinite_200ms]"></div>
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-[bounce_1s_infinite_400ms]"></div>
+            </div>
+        </div>
+      )}
+
       {/* Back Button (Top Left) */}
       <button 
         onClick={() => navigate('/')} 
@@ -591,9 +619,10 @@ export const Login = ({ onLogin }: { onLogin: (u: any) => void }) => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         <div className="bg-[#061525] py-10 px-6 shadow-2xl shadow-black/50 sm:rounded-2xl sm:px-10 border border-slate-800">
           
+          {/* Logo Section - No Background Container */}
           <div className="flex justify-center mb-8">
-            <div className="w-full px-8 flex items-center justify-center">
-              <img src={HERO_LOGO_URL} className="w-full h-auto object-contain drop-shadow-lg" alt="App Logo" />
+            <div className="h-32 w-auto flex items-center justify-center">
+              <img src={HERO_LOGO_URL} className="h-full w-auto object-contain" alt="App Logo" />
             </div>
           </div>
 

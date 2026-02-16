@@ -59,6 +59,7 @@ export interface Student {
   fullName: string;
   mobile: string;
   email?: string;
+  alternateMobile?: string; // Added field
   photoUrl?: string;
   seatId: string | null; // Seat Number (e.g., "A1")
   joinDate: string; // ISO Date
@@ -75,6 +76,7 @@ export interface Student {
   durationMonths?: number;
   totalFeeFixed?: number;
   isHandicapped?: boolean; // New Field for Seat Color Logic
+  admissionType?: 'REGULAR' | 'RESERVED'; // New: Regular vs Reserved Seat
 }
 
 export interface Seat {
@@ -117,6 +119,7 @@ export interface Attendance {
 
 export interface AppSettings {
   monthlyFee: number;
+  reservedFee: number; // New: Fee for reserved seats
   maintenanceMode: boolean;
   classes: string[];
   preparations: string[];

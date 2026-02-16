@@ -46,7 +46,8 @@ const SEED_STUDENTS: Student[] = [
     planType: 'MONTHLY',
     village: 'Pune',
     class: 'MPSC',
-    preparation: 'Competitive'
+    preparation: 'Competitive',
+    admissionType: 'REGULAR'
   },
   {
     id: 's2',
@@ -61,12 +62,14 @@ const SEED_STUDENTS: Student[] = [
     planType: 'MONTHLY',
     village: 'Mumbai',
     class: 'UPSC',
-    preparation: 'Civil Services'
+    preparation: 'Civil Services',
+    admissionType: 'RESERVED'
   }
 ];
 
 const DEFAULT_SETTINGS: AppSettings = {
     monthlyFee: 800,
+    reservedFee: 1000,
     maintenanceMode: false,
     classes: ['10th', '12th', 'Graduation', 'Post Graduation', 'MPSC', 'UPSC', 'Engineering', 'Medical'],
     preparations: ['Board Exams', 'Competitive Exams', 'Entrance Exams', 'Self Study', 'Remote Work']
@@ -137,9 +140,8 @@ const processLoginForAccount = async (account: LibraryAccount) => {
             });
             localStorage.setItem(storageKey, JSON.stringify(data));
         } catch(e: any) {
-            console.error(`Error loading ${colName} (using local fallback)`, e.message);
-            // Permission denied usually means auth token expired or not present.
-            // We ignore cloud fetch and rely on what's in localStorage if offline/unauthed.
+            // Silently fail on permissions/network to show cached data
+            // console.error(`Error loading ${colName} (using local fallback)`, e.message);
         }
     };
 
@@ -507,7 +509,7 @@ export const Store = {
     if (isDemo) {
         const user: User = {
           id: 'demo-123',
-          email: 'demo@abhyasika.pro',
+          email: 'demo@digitalabhyasika.com',
           displayName: 'Demo Admin',
           isDemo: true,
           role: 'ADMIN',
@@ -640,7 +642,12 @@ export const Store = {
   // --- Settings ---
   getSettings: (): AppSettings => {
       const s = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      return s ? JSON.parse(s) : DEFAULT_SETTINGS;
+      if (s) {
+          const parsed = JSON.parse(s);
+          // Ensure new fields exist by merging with default
+          return { ...DEFAULT_SETTINGS, ...parsed };
+      }
+      return DEFAULT_SETTINGS;
   },
   saveSettings: async (settings: AppSettings) => {
       localStorage.setItem(STORAGE_KEYS.SETTINGS, JSON.stringify(settings));
@@ -762,6 +769,7 @@ export const Store = {
       if (seatIdx >= 0) {
         seats[seatIdx].status = 'OCCUPIED';
         seats[seatIdx].studentId = student.id;
+        // Optionally store reservation status on seat too if needed, but keeping it simple for now
         localStorage.setItem(STORAGE_KEYS.SEATS, JSON.stringify(seats));
         await Store._syncLocalToCloud('seats', seats[seatIdx]);
       }
@@ -816,6 +824,11 @@ export const Store = {
         await Store._syncLocalToCloud('students', students[sIdx]);
     }
   },
+  deletePayment: async (id: string) => {
+      const list = Store.getPayments().filter(p => p.id !== id);
+      localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(list));
+      await Store._deleteFromCloud('payments', id);
+  },
 
   // --- Enquiries ---
   getEnquiries: (): Enquiry[] => {
@@ -836,6 +849,11 @@ export const Store = {
           localStorage.setItem(STORAGE_KEYS.ENQUIRIES, JSON.stringify(list));
           await Store._syncLocalToCloud('enquiries', enquiry);
       }
+  },
+  deleteEnquiry: async (id: string) => {
+      const list = Store.getEnquiries().filter(e => e.id !== id);
+      localStorage.setItem(STORAGE_KEYS.ENQUIRIES, JSON.stringify(list));
+      await Store._deleteFromCloud('enquiries', id);
   },
 
   // --- Attendance ---

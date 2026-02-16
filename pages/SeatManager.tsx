@@ -3,21 +3,18 @@ import React, { useEffect, useState } from 'react';
 import { Store } from '../services/store';
 import { Seat, Student, Room } from '../types';
 import { Card, Badge, Modal, Button, Input } from '../components/ui';
-import { User, UserPlus, Armchair, Filter, Zap, Heart, Accessibility } from 'lucide-react';
+// Added Users to imports
+import { User, UserPlus, Armchair, Filter, Zap, Heart, Accessibility, ChevronRight, Users } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 
 export const SeatManager = () => {
   const [seats, setSeats] = useState<Seat[]>([]);
-  // Removed Room State as we now show all seats
-  
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedSeat, setSelectedSeat] = useState<Seat | null>(null);
   
-  // Advanced Filters
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'AVAILABLE' | 'OCCUPIED' | 'MAINTENANCE' | 'RESERVED'>('ALL');
   const [categoryFilter, setCategoryFilter] = useState<'ALL' | 'GENERAL' | 'AC' | 'LADIES'>('ALL');
   
-  // Assignment State
   const [assignTab, setAssignTab] = useState<'EXISTING' | 'NEW'>('EXISTING');
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [newStudent, setNewStudent] = useState<Partial<Student>>({});
@@ -33,44 +30,38 @@ export const SeatManager = () => {
   };
 
   const getSeatColor = (seat: Seat) => {
-    switch (seat.status) {
-      case 'AVAILABLE': 
-        return 'bg-white border-slate-200 text-slate-700 hover:border-primary-400 hover:shadow-md';
-      
-      case 'OCCUPIED':
-        // Find the student to check attributes
+    if (seat.status === 'AVAILABLE') return 'bg-white border-slate-200 text-slate-700 hover:border-primary-400 hover:shadow-md';
+    if (seat.status === 'MAINTENANCE') return 'bg-gradient-to-br from-yellow-300 to-yellow-500 border-yellow-500 text-yellow-900 shadow-sm';
+    if (seat.status === 'OCCUPIED') {
         const occupant = students.find(s => s.id === seat.studentId);
-        if (!occupant) return 'bg-primary-900 border-primary-950 text-white'; // Fallback Dark Blue
-
-        if (occupant.isHandicapped) return 'bg-black border-slate-900 text-white';
-        if (occupant.gender === 'FEMALE') return 'bg-pink-900 border-pink-950 text-white';
-        return 'bg-primary-900 border-primary-950 text-white'; // Default Male
-      
-      case 'MAINTENANCE': 
-        return 'bg-red-50 border-red-200 text-red-400';
-      
-      case 'RESERVED': 
-        return 'bg-purple-50 border-purple-200 text-purple-600';
-      
-      default: 
-        return 'bg-white';
+        if (!occupant) return 'bg-gradient-to-br from-slate-600 to-slate-800 border-slate-800 text-white shadow-md';
+        if (occupant.admissionType === 'REGULAR') return 'bg-gradient-to-br from-orange-400 to-orange-600 border-orange-600 text-white shadow-md';
+        if (occupant.isHandicapped) return 'bg-gradient-to-br from-red-500 to-red-700 border-red-700 text-white shadow-md';
+        if (occupant.gender === 'FEMALE') return 'bg-gradient-to-br from-pink-400 to-pink-600 border-pink-600 text-white shadow-md';
+        return 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-700 text-white shadow-md';
     }
+    return 'bg-gradient-to-br from-slate-600 to-slate-800 border-slate-800 text-white shadow-md';
+  };
+
+  const checkRegularLimit = (isNewRegular: boolean) => {
+      if (!isNewRegular) return true;
+      const regularCount = students.filter(s => s.seatId && s.admissionType === 'REGULAR').length;
+      if (regularCount >= 2) {
+          alert("Limit Reached: Only 2 students can hold a 'Not Reserved' seat per session.");
+          return false;
+      }
+      return true;
   };
 
   const handleAssignExisting = async () => {
     if (!selectedSeat || !selectedStudentId) return;
-    
     const student = students.find(s => s.id === selectedStudentId);
     if (!student) return;
-
-    // 1. Update Student
+    if (!checkRegularLimit(student.admissionType === 'REGULAR')) return;
     const updatedStudent = { ...student, seatId: selectedSeat.id };
     await Store.updateStudent(updatedStudent);
-
-    // 2. Update Seat Status
     const updatedSeat: Seat = { ...selectedSeat, status: 'OCCUPIED', studentId: student.id };
     Store.updateSeat(updatedSeat);
-
     loadData();
     setSelectedSeat(null);
     setSelectedStudentId('');
@@ -78,7 +69,7 @@ export const SeatManager = () => {
 
   const handleQuickAdd = async () => {
     if (!selectedSeat || !newStudent.fullName || !newStudent.mobile) return;
-
+    if (!checkRegularLimit(true)) return;
     const studentData: Student = {
         id: 's-' + Date.now(),
         fullName: newStudent.fullName,
@@ -89,10 +80,10 @@ export const SeatManager = () => {
         planEndDate: format(addDays(new Date(), 30), 'yyyy-MM-dd'),
         gender: 'MALE', 
         dues: 0,
-        planType: 'MONTHLY'
+        planType: 'MONTHLY',
+        admissionType: 'REGULAR'
     };
-
-    await Store.addStudent(studentData); // handles seat update internally in Store.addStudent
+    await Store.addStudent(studentData);
     loadData();
     setSelectedSeat(null);
     setNewStudent({});
@@ -100,71 +91,50 @@ export const SeatManager = () => {
 
   const handleVacateSeat = async () => {
       if(!selectedSeat || !selectedSeat.studentId) return;
-
-      // 1. Find Student and remove seatId
       const student = students.find(s => s.id === selectedSeat.studentId);
       if(student) {
           const updatedStudent = { ...student, seatId: null };
           await Store.updateStudent(updatedStudent);
       }
-
-      // 2. Update Seat
       const updatedSeat: Seat = { ...selectedSeat, status: 'AVAILABLE', studentId: undefined };
       Store.updateSeat(updatedSeat);
-      
       loadData();
       setSelectedSeat(null);
   };
 
-  // Filter Logic - No Room Filter
   const filteredSeats = seats.filter(s => {
       const matchStatus = statusFilter === 'ALL' || s.status === statusFilter;
       const seatCat = s.category || 'GENERAL';
       const matchCategory = categoryFilter === 'ALL' || seatCat === categoryFilter;
       return matchStatus && matchCategory;
-  });
+  }).sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true, sensitivity: 'base' }));
   
   const occupiedStudent = selectedSeat?.studentId ? students.find(s => s.id === selectedSeat.studentId) : null;
   const unseatedStudents = students.filter(s => !s.seatId);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4">
+    <div className="space-y-6 animate-fade-in-up">
+      <div className="flex flex-col gap-5">
         <div>
-            <h1 className="text-2xl font-bold text-slate-900">Seat Management</h1>
-            <p className="text-sm text-slate-500">Manage seating arrangement, reservations and maintenance.</p>
+            <h1 className="text-2xl font-extrabold text-slate-900">Seat Manager</h1>
+            <p className="text-sm text-slate-500 font-medium">Real-time floor arrangement</p>
         </div>
         
-        {/* Removed Room Tabs - Showing All Seats */}
-
-        {/* Filters Toolbar */}
-        <div className="flex flex-col sm:flex-row gap-4 p-4 bg-white rounded-lg border border-slate-200 shadow-sm">
-            <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-slate-400" />
-                <span className="text-xs font-bold text-slate-500 uppercase">Status:</span>
-                <div className="flex flex-wrap gap-1">
-                    {['ALL', 'AVAILABLE', 'OCCUPIED', 'MAINTENANCE', 'RESERVED'].map(f => (
+        {/* Adaptive Filters Toolbar */}
+        <div className="flex flex-col gap-4 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <div className="flex items-center gap-2 min-w-[80px]">
+                    <Filter className="h-4 w-4 text-slate-400" />
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Status</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                    {['ALL', 'AVAILABLE', 'OCCUPIED', 'RESERVED'].map(f => (
                         <button
                             key={f}
                             onClick={() => setStatusFilter(f as any)}
-                            className={`px-2.5 py-1 text-xs rounded-md transition-colors ${statusFilter === f ? 'bg-primary-700 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${statusFilter === f ? 'bg-primary-700 text-white border-primary-700 shadow-md shadow-primary-700/20' : 'bg-slate-50 text-slate-500 border-slate-100 hover:bg-slate-100'}`}
                         >
-                            {f}
-                        </button>
-                    ))}
-                </div>
-            </div>
-            <div className="w-px bg-slate-200 hidden sm:block"></div>
-            <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-500 uppercase">Category:</span>
-                <div className="flex flex-wrap gap-1">
-                    {['ALL', 'GENERAL', 'AC', 'LADIES'].map(f => (
-                        <button
-                            key={f}
-                            onClick={() => setCategoryFilter(f as any)}
-                            className={`px-2.5 py-1 text-xs rounded-md transition-colors ${categoryFilter === f ? 'bg-primary-100 text-primary-700 border border-primary-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
-                        >
-                            {f}
+                            {f === 'ALL' ? 'Total' : f}
                         </button>
                     ))}
                 </div>
@@ -172,209 +142,160 @@ export const SeatManager = () => {
         </div>
       </div>
 
-      <Card className="p-6 min-h-[500px]">
+      <Card className="p-4 sm:p-6 overflow-hidden">
         {filteredSeats.length > 0 ? (
-            <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-4">
+            <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-3 sm:gap-4">
             {filteredSeats.map(seat => {
                  const occupant = seat.studentId ? students.find(s => s.id === seat.studentId) : null;
-                 const isHandicapped = occupant?.isHandicapped;
                  const isSelected = selectedSeat?.id === seat.id;
 
                  return (
                 <div
                     key={seat.id}
                     onClick={() => { setSelectedSeat(seat); setAssignTab('EXISTING'); setSelectedStudentId(''); setNewStudent({}); }}
-                    className={`relative group aspect-square rounded-xl border flex flex-col items-center justify-center cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-1 ${isSelected ? 'bg-slate-800 text-white border-slate-900 ring-4 ring-primary-700 shadow-md transform -translate-y-1' : getSeatColor(seat)}`}
+                    className={`relative group aspect-square rounded-xl sm:rounded-2xl border flex flex-col items-center justify-center cursor-pointer transition-all duration-300 active:scale-90 touch-manipulation ${isSelected ? 'bg-slate-800 text-white border-slate-900 ring-4 ring-primary-700/30 z-10 scale-110 shadow-xl' : getSeatColor(seat)}`}
                 >
-                    {/* Category Indicator Dot */}
-                    {seat.category === 'AC' && <div className="absolute top-2 left-2"><Zap className="h-3 w-3 text-blue-400 fill-blue-400" /></div>}
-                    {seat.category === 'LADIES' && <div className="absolute top-2 left-2"><Heart className="h-3 w-3 text-pink-400 fill-pink-400" /></div>}
-                    {isHandicapped && <div className="absolute top-2 left-2"><Accessibility className="h-3 w-3 text-slate-200" /></div>}
+                    {seat.category === 'AC' && <div className="absolute top-1.5 left-1.5"><Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-blue-400 fill-blue-400 drop-shadow-sm" /></div>}
+                    {seat.category === 'LADIES' && <div className="absolute top-1.5 left-1.5"><Heart className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-pink-400 fill-pink-400 drop-shadow-sm" /></div>}
+                    {occupant?.isHandicapped && <div className="absolute top-1.5 left-1.5"><Accessibility className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white drop-shadow-md" /></div>}
 
-                    {/* Seat Icon */}
-                    <Armchair className={`h-8 w-8 mb-1 transition-transform group-hover:scale-110 ${seat.status === 'OCCUPIED' || isSelected ? 'fill-slate-800 text-slate-600 opacity-80' : 'text-slate-400'}`} strokeWidth={1.5} />
+                    <Armchair className={`h-6 w-6 sm:h-8 sm:w-8 mb-0.5 sm:mb-1 transition-transform group-hover:scale-110 ${seat.status === 'OCCUPIED' || isSelected ? 'fill-white/10 text-white/50' : 'text-slate-300'}`} strokeWidth={1.5} />
+                    <span className={`text-[10px] sm:text-xs font-black font-mono ${seat.status === 'OCCUPIED' || isSelected ? 'text-white' : 'text-slate-700'}`}>{seat.label}</span>
                     
-                    {/* Seat Number */}
-                    <span className={`text-sm font-bold font-mono ${seat.status === 'OCCUPIED' || isSelected ? 'text-white' : 'text-slate-700'}`}>{seat.label}</span>
-                    
-                    {/* Status Pulse */}
                     {seat.status === 'OCCUPIED' && !isSelected && (
-                        <div className="absolute top-2 right-2">
-                            <div className="bg-emerald-500 rounded-full p-1 shadow-sm animate-pulse"></div>
+                        <div className="absolute top-1.5 right-1.5">
+                            <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 bg-white/40 rounded-full animate-pulse shadow-sm"></div>
                         </div>
-                    )}
-                     {seat.status === 'MAINTENANCE' && (
-                        <div className="absolute top-2 right-2 text-xs text-red-500">⚠</div>
                     )}
                 </div>
             )})}
             </div>
         ) : (
-            <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-                <Armchair className="h-12 w-12 mb-2 opacity-20" />
-                <p>No seats found matching your filters.</p>
-                <button onClick={() => {setStatusFilter('ALL'); setCategoryFilter('ALL')}} className="text-primary-700 text-sm mt-2 hover:underline">Clear Filters</button>
+            <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                <Armchair className="h-16 w-16 mb-4 opacity-10" />
+                <p className="font-bold uppercase tracking-widest text-xs">No matching seats</p>
+                <button onClick={() => {setStatusFilter('ALL'); setCategoryFilter('ALL')}} className="text-primary-700 text-sm mt-3 font-bold hover:underline">Reset View</button>
             </div>
         )}
         
-        <div className="mt-8 flex gap-6 justify-center flex-wrap border-t border-slate-100 pt-6">
-           <div className="flex items-center gap-2">
-               <div className="w-4 h-4 bg-primary-900 border border-primary-950 rounded"></div>
-               <span className="text-xs font-medium text-slate-500">Male</span>
-           </div>
-           <div className="flex items-center gap-2">
-               <div className="w-4 h-4 bg-pink-900 border border-pink-950 rounded"></div>
-               <span className="text-xs font-medium text-slate-500">Female</span>
-           </div>
-           <div className="flex items-center gap-2">
-               <div className="w-4 h-4 bg-black border border-slate-800 rounded"></div>
-               <span className="text-xs font-medium text-slate-500">Handicapped</span>
-           </div>
-            <div className="w-px h-4 bg-slate-300 mx-2"></div>
-           <div className="flex items-center gap-2">
-               <div className="w-4 h-4 bg-white border border-slate-200 rounded"></div>
-               <span className="text-xs font-medium text-slate-500">Available</span>
-           </div>
-           <div className="flex items-center gap-2">
-               <div className="w-4 h-4 bg-red-50 border border-red-200 rounded"></div>
-               <span className="text-xs font-medium text-slate-500">Maintenance</span>
-           </div>
+        {/* Legend - Responsive Wrap */}
+        <div className="mt-10 pt-8 border-t border-slate-100 flex flex-wrap gap-x-6 gap-y-4 justify-center">
+           {[
+               { color: 'bg-gradient-to-br from-blue-500 to-blue-700', label: 'Male' },
+               { color: 'bg-gradient-to-br from-pink-400 to-pink-600', label: 'Female' },
+               { color: 'bg-gradient-to-br from-red-500 to-red-700', label: 'Handicap' },
+               { color: 'bg-gradient-to-br from-orange-400 to-orange-600', label: 'Regular' },
+               { color: 'bg-white border-slate-200', label: 'Empty' },
+               { color: 'bg-gradient-to-br from-yellow-300 to-yellow-500', label: 'Repair' }
+           ].map(item => (
+               <div key={item.label} className="flex items-center gap-2">
+                   <div className={`w-3.5 h-3.5 rounded-md border shadow-sm ${item.color}`}></div>
+                   <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{item.label}</span>
+               </div>
+           ))}
         </div>
       </Card>
 
-      <Modal 
-        isOpen={!!selectedSeat} 
-        onClose={() => setSelectedSeat(null)} 
-        title={`Seat Details: ${selectedSeat?.label}`}
-      >
-        <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+      <Modal isOpen={!!selectedSeat} onClose={() => setSelectedSeat(null)} title={`Unit Terminal: ${selectedSeat?.label}`}>
+        <div className="space-y-5">
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                 <div>
-                     <span className="text-sm font-medium text-slate-500 block">Status</span>
+                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-1">Live Status</span>
                      <Badge variant={selectedSeat?.status === 'OCCUPIED' ? 'warning' : 'success'}>
                         {selectedSeat?.status}
                      </Badge>
                 </div>
-                {selectedSeat?.category && (
-                    <div className="text-right">
-                        <span className="text-sm font-medium text-slate-500 block">Category</span>
-                        <span className="text-sm font-bold text-slate-900">{selectedSeat.category}</span>
-                    </div>
-                )}
+                <div className="text-right">
+                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest block mb-1">Configuration</span>
+                    <span className="text-sm font-black text-slate-900">{selectedSeat?.category || 'GENERAL'}</span>
+                </div>
             </div>
             
-            {/* Maintenance Toggle */}
-            <div className="flex items-center gap-2 pb-2">
+            <label className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors group">
                  <input 
                     type="checkbox" 
-                    id="maint" 
+                    className="w-5 h-5 rounded-md text-primary-700 border-slate-300 focus:ring-primary-500"
                     checked={selectedSeat?.status === 'MAINTENANCE'} 
                     onChange={(e) => {
-                        if(selectedSeat?.status === 'OCCUPIED') return alert("Cannot set occupied seat to maintenance.");
+                        if(selectedSeat?.status === 'OCCUPIED') return alert("Operation Denied: Seat is currently in use.");
                         const newStatus = e.target.checked ? 'MAINTENANCE' : 'AVAILABLE';
                         Store.updateSeat({...selectedSeat!, status: newStatus});
                         loadData();
                         setSelectedSeat({...selectedSeat!, status: newStatus});
                     }}
                  />
-                 <label htmlFor="maint" className="text-sm text-slate-600">Mark as Under Maintenance</label>
-            </div>
+                 <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 transition-colors">Toggle Maintenance Lock</span>
+            </label>
 
             {selectedSeat?.status === 'OCCUPIED' && occupiedStudent ? (
-                <div className="space-y-3 border-t border-slate-100 pt-3">
-                    <h4 className="font-semibold text-slate-900">Occupant Details</h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div className="text-slate-500">Name:</div>
-                        <div className="font-medium">{occupiedStudent.fullName}</div>
-                        <div className="text-slate-500">Mobile:</div>
-                        <div className="font-medium">{occupiedStudent.mobile}</div>
-                        <div className="text-slate-500">Plan Ends:</div>
-                        <div className="font-medium text-primary-700">{occupiedStudent.planEndDate}</div>
+                <div className="space-y-4 border-t border-slate-100 pt-5">
+                    <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Active Occupant</h4>
+                    <div className="grid grid-cols-2 gap-4 bg-white p-4 rounded-2xl border border-slate-200">
+                        <div>
+                            <span className="text-[9px] font-bold text-slate-400 uppercase block">Name</span>
+                            <span className="font-bold text-slate-900 truncate block">{occupiedStudent.fullName}</span>
+                        </div>
+                        <div className="text-right">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase block">Admission</span>
+                            <span className="font-bold text-primary-700 text-xs block">{occupiedStudent.admissionType === 'REGULAR' ? 'NOT RESERVED' : 'RESERVED'}</span>
+                        </div>
                     </div>
-                    {occupiedStudent.isHandicapped && (
-                         <Badge variant="neutral">♿ Handicapped Seat</Badge>
-                    )}
-                    <div className="pt-4 flex gap-2">
-                         <Button size="sm" variant="outline" className="flex-1">View Profile</Button>
-                         <Button size="sm" variant="danger" className="flex-1" onClick={handleVacateSeat}>Vacate Seat</Button>
+                    <div className="flex gap-3 pt-2">
+                         <Button variant="danger" className="flex-1 h-12 rounded-xl text-sm font-bold" onClick={handleVacateSeat}>Vacate Unit</Button>
                     </div>
                 </div>
             ) : (selectedSeat?.status === 'AVAILABLE') ? (
                 <div className="pt-2">
-                    <div className="flex border-b border-slate-200 mb-4">
+                    <div className="flex bg-slate-100 p-1 rounded-xl mb-5">
                         <button 
-                            className={`flex-1 py-2 text-sm font-medium border-b-2 ${assignTab === 'EXISTING' ? 'border-primary-700 text-primary-700' : 'border-transparent text-slate-500'}`}
+                            className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${assignTab === 'EXISTING' ? 'bg-white shadow-sm text-primary-700' : 'text-slate-500'}`}
                             onClick={() => setAssignTab('EXISTING')}
                         >
-                            Select Student
+                            Waitlist
                         </button>
                         <button 
-                            className={`flex-1 py-2 text-sm font-medium border-b-2 ${assignTab === 'NEW' ? 'border-primary-700 text-primary-700' : 'border-transparent text-slate-500'}`}
+                            className={`flex-1 py-2.5 text-xs font-bold rounded-lg transition-all ${assignTab === 'NEW' ? 'bg-white shadow-sm text-primary-700' : 'text-slate-500'}`}
                             onClick={() => setAssignTab('NEW')}
                         >
-                            New Admission
+                            Quick Add
                         </button>
                     </div>
 
                     {assignTab === 'EXISTING' ? (
-                        <div className="space-y-3 animate-fade-in-up">
-                            <label className="block text-sm font-medium text-slate-700">Select Unseated Student</label>
+                        <div className="space-y-4 animate-fade-in-up">
                             {unseatedStudents.length > 0 ? (
-                                <select 
-                                    className="w-full h-10 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                                    value={selectedStudentId}
-                                    onChange={(e) => setSelectedStudentId(e.target.value)}
-                                >
-                                    <option value="">-- Choose Student --</option>
-                                    {unseatedStudents.map(s => (
-                                        <option key={s.id} value={s.id}>{s.fullName} ({s.mobile})</option>
-                                    ))}
-                                </select>
+                                <>
+                                    <div className="relative">
+                                        <select 
+                                            className="w-full h-12 rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none transition-all"
+                                            value={selectedStudentId}
+                                            onChange={(e) => setSelectedStudentId(e.target.value)}
+                                        >
+                                            <option value="">-- Choose Profile --</option>
+                                            {unseatedStudents.map(s => (
+                                                <option key={s.id} value={s.id}>{s.fullName} ({s.admissionType || 'REGULAR'})</option>
+                                            ))}
+                                        </select>
+                                        <ChevronRight className="absolute right-4 top-3.5 h-5 w-5 text-slate-400 rotate-90 pointer-events-none" />
+                                    </div>
+                                    <Button className="w-full h-12 rounded-xl text-sm font-bold" disabled={!selectedStudentId} onClick={handleAssignExisting}>Complete Assignment</Button>
+                                </>
                             ) : (
-                                <p className="text-sm text-slate-400 italic py-2">No students currently waiting for a seat.</p>
+                                <div className="text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                    <Users className="h-8 w-8 mx-auto mb-2 text-slate-300" />
+                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Waitlist Empty</p>
+                                </div>
                             )}
-                            <Button 
-                                className="w-full mt-2" 
-                                disabled={!selectedStudentId} 
-                                onClick={handleAssignExisting}
-                            >
-                                Confirm Assignment
-                            </Button>
                         </div>
                     ) : (
                         <div className="space-y-3 animate-fade-in-up">
-                            <Input 
-                                label="Full Name" 
-                                placeholder="Student Name"
-                                value={newStudent.fullName || ''}
-                                onChange={e => setNewStudent({...newStudent, fullName: e.target.value})}
-                            />
-                            <Input 
-                                label="Mobile Number" 
-                                placeholder="10-digit mobile"
-                                value={newStudent.mobile || ''}
-                                onChange={e => setNewStudent({...newStudent, mobile: e.target.value})}
-                            />
-                            <Button className="w-full mt-2" onClick={handleQuickAdd} icon={UserPlus}>
-                                Register & Assign
-                            </Button>
+                            <Input label="Full Name" placeholder="Search or Type Name" value={newStudent.fullName || ''} onChange={e => setNewStudent({...newStudent, fullName: e.target.value})} className="h-11 rounded-xl" />
+                            <Input label="Mobile" placeholder="Contact Number" value={newStudent.mobile || ''} onChange={e => setNewStudent({...newStudent, mobile: e.target.value})} className="h-11 rounded-xl" />
+                            <Button className="w-full h-12 rounded-xl text-sm font-bold mt-2" onClick={handleQuickAdd} icon={UserPlus}>Onboard Student</Button>
                         </div>
                     )}
                 </div>
-            ) : (
-                <div className="text-center py-4 text-slate-500">
-                    <p>This seat is currently unavailable ({selectedSeat?.status}).</p>
-                    {selectedSeat?.status === 'MAINTENANCE' && (
-                         <Button size="sm" variant="outline" className="mt-2" onClick={() => {
-                            Store.updateSeat({...selectedSeat!, status: 'AVAILABLE'});
-                            loadData();
-                            setSelectedSeat({...selectedSeat!, status: 'AVAILABLE'});
-                        }}>
-                            Mark Active
-                        </Button>
-                    )}
-                </div>
-            )}
+            ) : null}
         </div>
       </Modal>
     </div>

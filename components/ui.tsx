@@ -105,10 +105,10 @@ export const Badge: React.FC<{ children: ReactNode; variant?: 'success' | 'warni
 };
 
 // --- Modal ---
-export const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; children: ReactNode }> = ({ isOpen, onClose, title, children }) => {
+export const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; children: ReactNode; zIndex?: string }> = ({ isOpen, onClose, title, children, zIndex = "z-50" }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div className={cn("fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4", zIndex)}>
       <div className="w-full max-w-lg rounded-lg bg-white p-6 shadow-lg animate-zoom-in">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">{title}</h2>
@@ -120,7 +120,7 @@ export const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: stri
   );
 };
 
-// --- Stat Card ---
+// --- StatCard ---
 interface StatCardProps {
     label: string; 
     value: string | number; 
@@ -132,28 +132,31 @@ interface StatCardProps {
 
 export const StatCard: React.FC<StatCardProps> = ({ label, value, icon: Icon, trend, trendUp, color = 'blue' }) => {
   const colors = {
-      blue: "bg-primary-50 text-primary-700",
-      green: "bg-green-50 text-green-700",
-      orange: "bg-orange-50 text-orange-700",
-      tomato: "bg-tomato-50 text-tomato-600",
+      blue: "bg-gradient-to-br from-blue-500 to-blue-700 text-white",
+      green: "bg-gradient-to-br from-emerald-500 to-emerald-700 text-white",
+      orange: "bg-gradient-to-br from-orange-500 to-orange-700 text-white",
+      tomato: "bg-gradient-to-br from-red-500 to-red-700 text-white",
   };
 
   return (
-    <Card className="p-6">
-        <div className="flex items-center justify-between">
-        <div>
-            <p className="text-sm font-medium text-slate-500">{label}</p>
-            <div className="mt-2 text-3xl font-bold text-slate-900">{value}</div>
-            {trend && (
-            <p className={cn("mt-1 text-xs", trendUp ? "text-green-600" : "text-red-600")}>
+    <div className={cn("rounded-lg p-6 shadow-sm flex flex-col justify-between h-full border border-white/10", colors[color])}>
+        <div className="flex items-start justify-between">
+            <div>
+                <p className="text-sm font-medium text-white/80">{label}</p>
+                <div className="mt-2 text-3xl font-bold text-white">{value}</div>
+            </div>
+            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm shadow-inner">
+                <Icon className="h-6 w-6 text-white" />
+            </div>
+        </div>
+        {trend && (
+            <div className="mt-4 flex items-center text-xs font-medium text-white/90">
+                <span className={cn("mr-1", trendUp ? "text-white" : "text-white/80")}>
+                    {trendUp ? "↑" : "↓"}
+                </span>
                 {trend}
-            </p>
-            )}
-        </div>
-        <div className={cn("rounded-full p-3", colors[color])}>
-            <Icon className="h-6 w-6" />
-        </div>
-        </div>
-    </Card>
+            </div>
+        )}
+    </div>
   );
 };
