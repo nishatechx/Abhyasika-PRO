@@ -17,7 +17,7 @@ import {
   BellRing,
   IndianRupee, 
   Receipt,
-  TrendingUp,
+  TrendingUp, 
   MapPin,
   XCircle, 
   ShieldCheck,
@@ -175,7 +175,7 @@ export const Landing = () => {
               <div className="flex flex-col lg:flex-row items-center lg:items-end justify-between gap-12 lg:h-[500px]">
                   
                   {/* Left Column: Text - Strictly constrained width */}
-                  <div className="flex-1 text-center lg:text-left space-y-8 animate-fade-in-up lg:max-w-xl xl:max-w-2xl lg:pb-12">
+                  <div className="flex-1 text-center lg:text-left space-y-8 animate-fade-in-up lg:max-w-xl xl:max-w-2xl lg:pb-28">
                       <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 border border-orange-200 text-orange-800 text-sm font-bold mb-2 shadow-sm">
                          <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>
                          Maharashtra's #1 Choice
@@ -191,7 +191,7 @@ export const Landing = () => {
                       </p>
                       
                       <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-                         <Button size="lg" onClick={() => navigate('/login')} className="w-full sm:w-auto px-8 h-14 text-lg bg-orange-600 hover:bg-orange-700 shadow-xl shadow-orange-600/20 hover:translate-y-[-2px] transition-transform">
+                         <Button size="lg" onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 h-14 text-lg bg-orange-600 hover:bg-orange-700 shadow-xl shadow-orange-600/20 hover:translate-y-[-2px] transition-transform">
                            Get Started Now <ArrowRight className="ml-2 h-5 w-5" />
                          </Button>
                          <div className="hidden sm:flex items-center gap-4 text-sm font-bold text-slate-600">
@@ -220,7 +220,7 @@ export const Landing = () => {
            </div>
 
            {/* Scroll Down Arrow */}
-           <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20">
+           <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2 z-20">
                <div 
                  className="cursor-pointer animate-bounce bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-lg border border-slate-200 hover:bg-white transition-colors"
                  onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}

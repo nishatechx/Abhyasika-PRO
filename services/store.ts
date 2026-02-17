@@ -258,6 +258,41 @@ export const Store = {
       } catch (e) { console.error(`Firebase Delete Error (${collectionName}):`, e); }
   },
 
+  // NEW METHOD: Check for expired plans and auto-release seats
+  checkExpirations: async () => {
+      const students = Store.getStudents();
+      const seats = Store.getSeats();
+      const today = format(new Date(), 'yyyy-MM-dd');
+      let studentsUpdated = false;
+      let seatsUpdated = false;
+
+      for (const s of students) {
+          // If active and plan ended yesterday or before (today > planEndDate)
+          if (s.status === 'ACTIVE' && s.planEndDate < today) {
+              // Expire Student
+              s.status = 'EXPIRED';
+              studentsUpdated = true;
+              
+              // Release Seat if assigned
+              if (s.seatId) {
+                  const seat = seats.find(st => st.id === s.seatId);
+                  // Double check seat belongs to student to avoid unseating wrong person
+                  if (seat && (seat.studentId === s.id || !seat.studentId)) {
+                      seat.status = 'AVAILABLE';
+                      delete seat.studentId;
+                      seatsUpdated = true;
+                      await Store._syncLocalToCloud('seats', seat);
+                  }
+                  s.seatId = null; // Clear from student
+              }
+              await Store._syncLocalToCloud('students', s);
+          }
+      }
+
+      if (studentsUpdated) localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(students));
+      if (seatsUpdated) localStorage.setItem(STORAGE_KEYS.SEATS, JSON.stringify(seats));
+  },
+
   // --- Master Database (Accounts) ---
   getAccounts: (): LibraryAccount[] => {
       const data = localStorage.getItem(STORAGE_KEYS.ACCOUNTS);
@@ -786,19 +821,26 @@ export const Store = {
   },
   deleteStudent: async (id: string) => {
       let students = Store.getStudents();
-      const student = students.find(s => s.id === id);
       
-      if(student && student.seatId) {
-          const seats = Store.getSeats();
-          const seatIdx = seats.findIndex(s => s.id === student.seatId);
-          if(seatIdx >= 0) {
-              seats[seatIdx].status = 'AVAILABLE';
-              seats[seatIdx].studentId = undefined;
-              localStorage.setItem(STORAGE_KEYS.SEATS, JSON.stringify(seats));
-              await Store._syncLocalToCloud('seats', seats[seatIdx]);
+      // 1. Release any seat occupied by this student (Robust check)
+      const seats = Store.getSeats();
+      let seatsChanged = false;
+      
+      for (const seat of seats) {
+          if (seat.studentId === id) {
+              seat.status = 'AVAILABLE';
+              delete seat.studentId;
+              seatsChanged = true;
+              // Sync individual seat change - fire and forget
+              Store._syncLocalToCloud('seats', seat);
           }
       }
       
+      if (seatsChanged) {
+          localStorage.setItem(STORAGE_KEYS.SEATS, JSON.stringify(seats));
+      }
+      
+      // 2. Delete Student
       students = students.filter(s => s.id !== id);
       localStorage.setItem(STORAGE_KEYS.STUDENTS, JSON.stringify(students));
       await Store._deleteFromCloud('students', id);

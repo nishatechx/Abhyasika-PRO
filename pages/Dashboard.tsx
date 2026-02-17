@@ -244,20 +244,28 @@ export const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    const studentsData = Store.getStudents();
-    const seatsData = Store.getSeats();
-    const payments = Store.getPayments();
-    
-    const totalSeats = seatsData.length;
-    const occupiedSeats = seatsData.filter(s => s.status === 'OCCUPIED').length;
-    const totalDues = studentsData.reduce((acc, s) => acc + (s.dues || 0), 0);
-    const monthlyCollection = payments.reduce((acc, p) => acc + p.amount, 0);
+    const initDashboard = async () => {
+        // Run expiry check first
+        await Store.checkExpirations();
+        
+        // Then load data
+        const studentsData = Store.getStudents();
+        const seatsData = Store.getSeats();
+        const payments = Store.getPayments();
+        
+        const totalSeats = seatsData.length;
+        const occupiedSeats = seatsData.filter(s => s.status === 'OCCUPIED').length;
+        const totalDues = studentsData.reduce((acc, s) => acc + (s.dues || 0), 0);
+        const monthlyCollection = payments.reduce((acc, p) => acc + p.amount, 0);
 
-    setStats({ totalStudents: studentsData.length, occupiedSeats, totalSeats, monthlyCollection, totalDues });
-    setSeats(seatsData);
-    setStudents(studentsData);
-    setRecentJoiners(studentsData.slice(-5).reverse());
-    setAttendanceRecords(Store.getAttendance());
+        setStats({ totalStudents: studentsData.length, occupiedSeats, totalSeats, monthlyCollection, totalDues });
+        setSeats(seatsData);
+        setStudents(studentsData);
+        setRecentJoiners(studentsData.slice(-5).reverse());
+        setAttendanceRecords(Store.getAttendance());
+    };
+
+    initDashboard();
   }, [isManualAttendanceOpen, isScannerOpen]);
 
 
