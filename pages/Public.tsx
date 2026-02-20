@@ -78,6 +78,26 @@ export const Landing = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const isPaused = useRef(false);
 
+  // Scroll Animation Observer
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-fade-in-up');
+          entry.target.classList.remove('opacity-0');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px' 
+    });
+
+    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []);
+
   const heroFeatures = [
       { icon: LayoutDashboard, label: "Seats Mgmt", color: "text-blue-600", bg: "bg-white/80 backdrop-blur-sm border-blue-100" },
       { icon: IndianRupee, label: "Fees Mgmt", color: "text-green-600", bg: "bg-white/80 backdrop-blur-sm border-green-100" },
@@ -231,7 +251,7 @@ export const Landing = () => {
         </div>
 
         {/* Stats Section */}
-        <div className="bg-white border-y border-slate-200 py-12">
+        <div className="bg-white border-y border-slate-200 py-12 reveal opacity-0">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center divide-x divide-slate-100">
                     {[
@@ -252,13 +272,13 @@ export const Landing = () => {
         {/* Features Grid */}
         <div id="features" className="py-24 bg-slate-50 relative">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-3xl mx-auto mb-16">
+            <div className="text-center max-w-3xl mx-auto mb-16 reveal opacity-0">
               <h2 className="text-3xl font-bold text-slate-900 mb-4">Powerful Features for Growth</h2>
               <div className="h-1 w-20 bg-orange-500 mx-auto rounded-full mb-4"></div>
               <p className="text-slate-600 text-lg">Everything you need to run your Abhyasika efficiently.</p>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 reveal opacity-0">
               {[
                 { 
                   icon: LayoutDashboard, 
@@ -311,7 +331,7 @@ export const Landing = () => {
 
         {/* Problem vs Solution Section */}
         <div className="py-20 bg-white">
-             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal opacity-0">
                  <div className="grid md:grid-cols-2 gap-12">
                      <div className="bg-tomato-50 p-8 rounded-3xl border border-tomato-100">
                          <h3 className="text-2xl font-bold text-tomato-800 mb-6 flex items-center gap-2">
@@ -359,13 +379,13 @@ export const Landing = () => {
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-900/20 rounded-full blur-[100px]"></div>
             <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-orange-900/20 rounded-full blur-[100px]"></div>
 
-            <div className="max-w-7xl mx-auto px-4 mb-12 text-center relative z-10">
+            <div className="max-w-7xl mx-auto px-4 mb-12 text-center relative z-10 reveal opacity-0">
                 <h2 className="text-3xl font-bold text-white mb-2">Trusted by Libraries Across Maharashtra</h2>
                 <p className="text-slate-400">Join 500+ owners from Pune, Nashik, Aurangabad & more.</p>
             </div>
             
             {/* Slider Container */}
-            <div className="max-w-7xl mx-auto px-4 relative">
+            <div className="max-w-7xl mx-auto px-4 relative reveal opacity-0">
                 <div 
                     ref={scrollRef}
                     className="flex gap-8 overflow-x-auto scrollbar-hide scroll-smooth snap-x snap-mandatory py-4"
@@ -410,7 +430,7 @@ export const Landing = () => {
         <div id="contact" className="py-24 bg-white relative">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid lg:grid-cols-2 gap-16 items-center">
-                    <div>
+                    <div className="reveal opacity-0">
                         <h2 className="text-4xl font-extrabold text-slate-900 mb-6">Get in touch with us</h2>
                         <p className="text-lg text-slate-600 mb-8 leading-relaxed">
                             Interested in digitizing your library? Have questions about pricing or features? 
@@ -448,7 +468,7 @@ export const Landing = () => {
                         </div>
                     </div>
 
-                    <div className="bg-slate-50 p-8 rounded-2xl border border-slate-200 shadow-xl">
+                    <div className="bg-slate-50 p-8 rounded-2xl border border-slate-200 shadow-xl reveal opacity-0">
                         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert('Thank you! We will contact you soon.'); }}>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-1">
@@ -481,7 +501,7 @@ export const Landing = () => {
 
       </main>
       
-      <footer className="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+      <footer className="bg-slate-900 text-slate-400 py-12 border-t border-slate-800 reveal opacity-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-8">
                 <div className="flex items-center gap-2">
@@ -545,7 +565,7 @@ export const Login = ({ onLogin }: { onLogin: (u: any) => void }) => {
             }}
         >
             {/* Dark Overlay for better contrast */}
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
+            <div className="absolute inset-0 bg-black/40"></div>
         </div>
 
       <div className="relative z-10 w-full max-w-sm p-8 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl animate-fade-in-up">

@@ -903,6 +903,7 @@ export const Settings = () => {
     const [rooms, setRooms] = useState<Room[]>([]);
     const [newRoomName, setNewRoomName] = useState('');
     const [newCapacity, setNewCapacity] = useState('');
+    const [editingRoomId, setEditingRoomId] = useState<string | null>(null);
 
     // Academic Tag State
     const [newTag, setNewTag] = useState('');
@@ -917,21 +918,39 @@ export const Settings = () => {
         if(profile) { await Store.saveProfile(profile); setActiveModal(null); }
     };
 
-    const handleAddRoom = async () => {
+    const handleSaveRoom = async () => {
         if(!newRoomName || !newCapacity) return alert("Enter Name and Capacity");
         const cap = parseInt(newCapacity);
         if(cap <= 0) return alert("Capacity must be positive");
 
-        const room: Room = {
-            id: 'room-' + Date.now(),
-            name: newRoomName,
-            capacity: cap
-        };
-        await Store.addRoom(room);
-        setRooms([...Store.getRooms()]);
-        setNewRoomName('');
-        setNewCapacity('');
-        alert("Room added! Seats have been generated automatically.");
+        if (editingRoomId) {
+             try {
+                await Store.updateRoom({
+                    id: editingRoomId,
+                    name: newRoomName,
+                    capacity: cap
+                });
+                setRooms([...Store.getRooms()]);
+                // Reset form
+                setEditingRoomId(null);
+                setNewRoomName('');
+                setNewCapacity('');
+                alert("Zone updated successfully.");
+             } catch (e: any) {
+                 alert(e.message);
+             }
+        } else {
+            const room: Room = {
+                id: 'room-' + Date.now(),
+                name: newRoomName,
+                capacity: cap
+            };
+            await Store.addRoom(room);
+            setRooms([...Store.getRooms()]);
+            setNewRoomName('');
+            setNewCapacity('');
+            alert("Room added! Seats have been generated automatically.");
+        }
     };
 
     const handleDeleteRoom = async (e: React.MouseEvent, id: string) => {
@@ -1018,7 +1037,12 @@ export const Settings = () => {
             <Modal isOpen={activeModal === 'ROOMS'} onClose={() => setActiveModal(null)} title="Space Blueprint">
                 <div className="space-y-6">
                     <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                        <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-3">Add New Zone</h4>
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{editingRoomId ? 'Edit Zone' : 'Add New Zone'}</h4>
+                            {editingRoomId && (
+                                <button onClick={() => { setEditingRoomId(null); setNewRoomName(''); setNewCapacity(''); }} className="text-[10px] font-bold text-red-500 hover:underline">Cancel Edit</button>
+                            )}
+                        </div>
                         <div className="grid grid-cols-5 gap-3">
                             <div className="col-span-3">
                                 <Input placeholder="Room Name (e.g. Hall A)" value={newRoomName} onChange={e => setNewRoomName(e.target.value)} className="h-10 text-xs" />
@@ -1026,9 +1050,9 @@ export const Settings = () => {
                             <div className="col-span-2">
                                 <Input type="number" placeholder="Cap." value={newCapacity} onChange={e => setNewCapacity(e.target.value)} className="h-10 text-xs" />
                             </div>
-                            <Button onClick={handleAddRoom} className="col-span-5 h-10 text-xs font-bold bg-slate-900">Generate Zone & Seats</Button>
+                            <Button onClick={handleSaveRoom} className={`col-span-5 h-10 text-xs font-bold ${editingRoomId ? 'bg-primary-700' : 'bg-slate-900'}`}>{editingRoomId ? 'Update Zone Configuration' : 'Generate Zone & Seats'}</Button>
                         </div>
-                        <p className="text-[10px] text-slate-400 mt-2 text-center">Seats are automatically created based on capacity.</p>
+                        <p className="text-[10px] text-slate-400 mt-2 text-center">Seats are automatically {editingRoomId ? 'adjusted' : 'created'} based on capacity.</p>
                     </div>
 
                     <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
@@ -1038,7 +1062,14 @@ export const Settings = () => {
                                     <div className="font-bold text-sm text-slate-900">{room.name}</div>
                                     <div className="text-[10px] text-slate-500 font-medium">Capacity: {room.capacity} Units</div>
                                 </div>
-                                <Button type="button" size="sm" variant="danger" className="h-8 px-3 text-[10px] font-bold" onClick={(e) => handleDeleteRoom(e, room.id)}>Delete Zone</Button>
+                                <div className="flex gap-2">
+                                    <Button type="button" size="sm" variant="outline" className="h-8 px-3 text-[10px] font-bold" onClick={(e) => {
+                                        setEditingRoomId(room.id);
+                                        setNewRoomName(room.name);
+                                        setNewCapacity(String(room.capacity || 0));
+                                    }}>Edit</Button>
+                                    <Button type="button" size="sm" variant="danger" className="h-8 px-3 text-[10px] font-bold" onClick={(e) => handleDeleteRoom(e, room.id)}>Delete</Button>
+                                </div>
                             </div>
                         ))}
                         {rooms.length === 0 && <div className="text-center text-xs text-slate-400 py-4 italic">No rooms configured.</div>}

@@ -4,7 +4,7 @@ import { Store } from '../services/store';
 import { Seat, Student, Room } from '../types';
 import { Card, Badge, Modal, Button, Input } from '../components/ui';
 // Added Users to imports
-import { User, UserPlus, Armchair, Filter, Zap, Heart, Accessibility, ChevronRight, Users } from 'lucide-react';
+import { User, UserPlus, Armchair, Filter, Zap, Heart, Accessibility, ChevronRight, Users, AlertCircle } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 
 export const SeatManager = () => {
@@ -35,9 +35,21 @@ export const SeatManager = () => {
     if (seat.status === 'OCCUPIED') {
         const occupant = students.find(s => s.id === seat.studentId);
         if (!occupant) return 'bg-gradient-to-br from-slate-600 to-slate-800 border-slate-800 text-white shadow-md';
-        if (occupant.admissionType === 'REGULAR') return 'bg-gradient-to-br from-orange-400 to-orange-600 border-orange-600 text-white shadow-md';
-        if (occupant.isHandicapped) return 'bg-gradient-to-br from-red-500 to-red-700 border-red-700 text-white shadow-md';
+        
+        // Priority 1: Handicap
+        if (occupant.isHandicapped) return 'bg-black border-slate-900 text-white shadow-md';
+        
+        // Priority 2: Admission Type
+        if (occupant.admissionType === 'RESERVED') return 'bg-gradient-to-br from-emerald-500 to-emerald-700 border-emerald-700 text-white shadow-md';
+        
+        // Priority 3: Gender 
+        // Note: Moving Gender above Regular to ensure gender colors are visible if admission is just standard regular
         if (occupant.gender === 'FEMALE') return 'bg-gradient-to-br from-pink-400 to-pink-600 border-pink-600 text-white shadow-md';
+        if (occupant.gender === 'MALE') return 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-700 text-white shadow-md';
+
+        // Fallback for Regular if no gender match (shouldn't happen given types)
+        if (occupant.admissionType === 'REGULAR') return 'bg-gradient-to-br from-red-500 to-red-700 border-red-700 text-white shadow-md';
+        
         return 'bg-gradient-to-br from-blue-500 to-blue-700 border-blue-700 text-white shadow-md';
     }
     return 'bg-gradient-to-br from-slate-600 to-slate-800 border-slate-800 text-white shadow-md';
@@ -57,7 +69,9 @@ export const SeatManager = () => {
     if (!selectedSeat || !selectedStudentId) return;
     const student = students.find(s => s.id === selectedStudentId);
     if (!student) return;
-    if (!checkRegularLimit(student.admissionType === 'REGULAR')) return;
+    // Removed strict regular limit check as per general usage patterns, but kept helper if needed later
+    // if (!checkRegularLimit(student.admissionType === 'REGULAR')) return;
+    
     const updatedStudent = { ...student, seatId: selectedSeat.id };
     await Store.updateStudent(updatedStudent);
     const updatedSeat: Seat = { ...selectedSeat, status: 'OCCUPIED', studentId: student.id };
@@ -69,7 +83,7 @@ export const SeatManager = () => {
 
   const handleQuickAdd = async () => {
     if (!selectedSeat || !newStudent.fullName || !newStudent.mobile) return;
-    if (!checkRegularLimit(true)) return;
+    // if (!checkRegularLimit(true)) return;
     const studentData: Student = {
         id: 's-' + Date.now(),
         fullName: newStudent.fullName,
@@ -90,12 +104,18 @@ export const SeatManager = () => {
   };
 
   const handleVacateSeat = async () => {
-      if(!selectedSeat || !selectedSeat.studentId) return;
-      const student = students.find(s => s.id === selectedSeat.studentId);
-      if(student) {
-          const updatedStudent = { ...student, seatId: null };
-          await Store.updateStudent(updatedStudent);
+      if(!selectedSeat) return;
+      
+      // If occupied, remove student assignment
+      if(selectedSeat.studentId) {
+          const student = students.find(s => s.id === selectedSeat.studentId);
+          if(student) {
+              const updatedStudent = { ...student, seatId: null };
+              await Store.updateStudent(updatedStudent);
+          }
       }
+      
+      // Make seat available
       const updatedSeat: Seat = { ...selectedSeat, status: 'AVAILABLE', studentId: undefined };
       Store.updateSeat(updatedSeat);
       loadData();
@@ -120,24 +140,26 @@ export const SeatManager = () => {
             <p className="text-sm text-slate-500 font-medium">Real-time floor arrangement</p>
         </div>
         
-        {/* Adaptive Filters Toolbar */}
-        <div className="flex flex-col gap-4 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                <div className="flex items-center gap-2 min-w-[80px]">
-                    <Filter className="h-4 w-4 text-slate-400" />
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Status</span>
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                    {['ALL', 'AVAILABLE', 'OCCUPIED', 'RESERVED'].map(f => (
-                        <button
-                            key={f}
-                            onClick={() => setStatusFilter(f as any)}
-                            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all border ${statusFilter === f ? 'bg-primary-700 text-white border-primary-700 shadow-md shadow-primary-700/20' : 'bg-slate-50 text-slate-500 border-slate-100 hover:bg-slate-100'}`}
-                        >
-                            {f === 'ALL' ? 'Total' : f}
-                        </button>
-                    ))}
-                </div>
+        {/* Color Legend Bar - UPDATED */}
+        <div className="flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded bg-gradient-to-br from-blue-500 to-blue-700"></div><span className="text-xs font-bold text-slate-600">Male</span></div>
+                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded bg-gradient-to-br from-pink-400 to-pink-600"></div><span className="text-xs font-bold text-slate-600">Female</span></div>
+                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded bg-black flex items-center justify-center"><Accessibility className="h-2 w-2 text-white"/></div><span className="text-xs font-bold text-slate-600">Handicap</span></div>
+                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded bg-gradient-to-br from-red-500 to-red-700"></div><span className="text-xs font-bold text-slate-600">Regular</span></div>
+                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded bg-gradient-to-br from-emerald-500 to-emerald-700"></div><span className="text-xs font-bold text-slate-600">Reserved</span></div>
+                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded bg-white border border-slate-300"></div><span className="text-xs font-bold text-slate-600">Empty</span></div>
+                <div className="flex items-center gap-2"><div className="w-3.5 h-3.5 rounded bg-gradient-to-br from-yellow-300 to-yellow-500"></div><span className="text-xs font-bold text-slate-600">Repair</span></div>
+            </div>
+            
+            {/* Filters integrated into bar */}
+            <div className="flex items-center gap-2 pl-4 border-l border-slate-100">
+                <Filter className="h-3.5 w-3.5 text-slate-400" />
+                <select className="bg-slate-50 border-none text-xs font-bold text-slate-600 rounded-lg focus:ring-0 cursor-pointer" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as any)}>
+                    <option value="ALL">All Status</option>
+                    <option value="AVAILABLE">Available</option>
+                    <option value="OCCUPIED">Occupied</option>
+                </select>
             </div>
         </div>
       </div>
@@ -177,23 +199,6 @@ export const SeatManager = () => {
                 <button onClick={() => {setStatusFilter('ALL'); setCategoryFilter('ALL')}} className="text-primary-700 text-sm mt-3 font-bold hover:underline">Reset View</button>
             </div>
         )}
-        
-        {/* Legend - Responsive Wrap */}
-        <div className="mt-10 pt-8 border-t border-slate-100 flex flex-wrap gap-x-6 gap-y-4 justify-center">
-           {[
-               { color: 'bg-gradient-to-br from-blue-500 to-blue-700', label: 'Male' },
-               { color: 'bg-gradient-to-br from-pink-400 to-pink-600', label: 'Female' },
-               { color: 'bg-gradient-to-br from-red-500 to-red-700', label: 'Handicap' },
-               { color: 'bg-gradient-to-br from-orange-400 to-orange-600', label: 'Regular' },
-               { color: 'bg-white border-slate-200', label: 'Empty' },
-               { color: 'bg-gradient-to-br from-yellow-300 to-yellow-500', label: 'Repair' }
-           ].map(item => (
-               <div key={item.label} className="flex items-center gap-2">
-                   <div className={`w-3.5 h-3.5 rounded-md border shadow-sm ${item.color}`}></div>
-                   <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">{item.label}</span>
-               </div>
-           ))}
-        </div>
       </Card>
 
       <Modal isOpen={!!selectedSeat} onClose={() => setSelectedSeat(null)} title={`Unit Terminal: ${selectedSeat?.label}`}>
@@ -227,21 +232,62 @@ export const SeatManager = () => {
                  <span className="text-sm font-bold text-slate-700 group-hover:text-slate-900 transition-colors">Toggle Maintenance Lock</span>
             </label>
 
-            {selectedSeat?.status === 'OCCUPIED' && occupiedStudent ? (
+            {selectedSeat?.status === 'OCCUPIED' ? (
                 <div className="space-y-4 border-t border-slate-100 pt-5">
                     <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Active Occupant</h4>
-                    <div className="grid grid-cols-2 gap-4 bg-white p-4 rounded-2xl border border-slate-200">
-                        <div>
-                            <span className="text-[9px] font-bold text-slate-400 uppercase block">Name</span>
-                            <span className="font-bold text-slate-900 truncate block">{occupiedStudent.fullName}</span>
+                    {occupiedStudent ? (
+                        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <div className="flex items-start justify-between mb-4">
+                                <div className="flex items-center gap-3">
+                                    <div className="h-12 w-12 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden">
+                                        {occupiedStudent.photoUrl ? (
+                                            <img src={occupiedStudent.photoUrl} className="w-full h-full object-cover" alt="Student" />
+                                        ) : (
+                                            <User className="h-6 w-6 text-slate-400" />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-slate-900 text-sm">{occupiedStudent.fullName}</h3>
+                                        <p className="text-xs text-slate-500 font-medium">{occupiedStudent.mobile}</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                    <Badge variant={occupiedStudent.dues > 0 ? 'error' : 'success'}>
+                                        {occupiedStudent.dues > 0 ? `Due: ₹${occupiedStudent.dues}` : 'Paid'}
+                                    </Badge>
+                                    <span className={`text-[10px] font-bold ${occupiedStudent.gender === 'FEMALE' ? 'text-pink-500' : 'text-blue-500'}`}>{occupiedStudent.gender}</span>
+                                </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                                <div>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Course</span>
+                                    <span className="text-xs font-bold text-slate-700">{occupiedStudent.preparation || occupiedStudent.class || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Plan Ends</span>
+                                    <span className={`text-xs font-bold ${new Date(occupiedStudent.planEndDate) < new Date() ? 'text-red-600' : 'text-slate-700'}`}>
+                                        {occupiedStudent.planEndDate}
+                                    </span>
+                                </div>
+                                <div>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Admission</span>
+                                    <span className="text-xs font-bold text-primary-700">{occupiedStudent.admissionType === 'REGULAR' ? 'Not Reserved' : 'Reserved'}</span>
+                                </div>
+                                <div>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase block mb-0.5">Joined</span>
+                                    <span className="text-xs font-bold text-slate-700">{occupiedStudent.joinDate}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div className="text-right">
-                            <span className="text-[9px] font-bold text-slate-400 uppercase block">Admission</span>
-                            <span className="font-bold text-primary-700 text-xs block">{occupiedStudent.admissionType === 'REGULAR' ? 'NOT RESERVED' : 'RESERVED'}</span>
+                    ) : (
+                        <div className="p-4 bg-red-50 rounded-2xl border border-red-100 text-red-600 text-sm font-bold flex items-center gap-2">
+                             <AlertCircle className="h-5 w-5" />
+                             Student data not found (Ghost Seat)
                         </div>
-                    </div>
+                    )}
                     <div className="flex gap-3 pt-2">
-                         <Button variant="danger" className="flex-1 h-12 rounded-xl text-sm font-bold" onClick={handleVacateSeat}>Vacate Unit</Button>
+                         <Button variant="danger" className="flex-1 h-12 rounded-xl text-sm font-bold" onClick={handleVacateSeat}>Make Available</Button>
                     </div>
                 </div>
             ) : (selectedSeat?.status === 'AVAILABLE') ? (

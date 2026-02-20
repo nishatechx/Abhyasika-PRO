@@ -7,7 +7,7 @@ import {
   Plus, Trash2, LogOut, Database, User, Building2, 
   Search, Check, ShieldCheck, Activity, Edit, 
   Settings as SettingsIcon, LayoutDashboard, Users, AlertCircle, 
-  BellRing, PieChart, MessageSquare, Send, Mail, CheckSquare, Square
+  BellRing, PieChart, MessageSquare, Send, Mail, CheckSquare, Square, Copy
 } from 'lucide-react';
 import { format, addMonths, parseISO, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
@@ -330,9 +330,34 @@ const LibrariesView = ({ accounts, onRefresh }: { accounts: LibraryAccount[], on
                                 <Input label="Library Name" value={editModal.libraryName} onChange={e => editModal && setEditModal({...editModal, libraryName: e.target.value})} />
                                 <Input label="Owner Name" value={editModal.ownerName || ''} onChange={e => editModal && setEditModal({...editModal, ownerName: e.target.value})} />
                                 <Input label="Mobile" value={editModal.mobile || ''} onChange={e => editModal && setEditModal({...editModal, mobile: e.target.value})} />
-                                <Input label="Password" value={editModal.password} onChange={e => editModal && setEditModal({...editModal, password: e.target.value})} />
                                 
-                                <div className="col-span-2 grid grid-cols-2 gap-4">
+                                {/* Credentials Section with Read-Only Username */}
+                                <div className="col-span-2 pt-2">
+                                    <h4 className="text-xs font-bold uppercase text-slate-500 mb-2">Login Credentials</h4>
+                                    <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3 rounded-lg border border-slate-200">
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-slate-400">Username (Email)</label>
+                                            <div className="flex items-center gap-2">
+                                                <input 
+                                                    className="w-full bg-transparent text-sm font-mono text-slate-700 focus:outline-none cursor-not-allowed" 
+                                                    value={editModal.username} 
+                                                    readOnly 
+                                                    title="Username cannot be changed to maintain Auth link"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <label className="text-xs font-bold text-slate-400">Password</label>
+                                            <input 
+                                                className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-sm font-mono text-slate-900 focus:ring-2 focus:ring-primary-500 focus:outline-none" 
+                                                value={editModal.password} 
+                                                onChange={e => editModal && setEditModal({...editModal, password: e.target.value})} 
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="col-span-2 grid grid-cols-2 gap-4 mt-2">
                                     <div className="space-y-1">
                                         <label className="text-sm font-medium">District</label>
                                         <select 
@@ -521,6 +546,8 @@ const NotificationsView = ({ accounts }: { accounts: LibraryAccount[] }) => {
     const [isSending, setIsSending] = useState(false);
     const [search, setSearch] = useState('');
 
+    const filteredAccounts = accounts.filter(a => a.libraryName.toLowerCase().includes(search.toLowerCase()));
+
     const toggleSelection = (id: string) => {
         const newSet = new Set(selectedIds);
         if (newSet.has(id)) newSet.delete(id);
@@ -542,7 +569,7 @@ const NotificationsView = ({ accounts }: { accounts: LibraryAccount[] }) => {
             const targetIds: string[] = target === 'ALL' ? accounts.map(a => a.id) : Array.from(selectedIds);
             
             if (targetIds.length === 0) {
-                alert("No libraries found to send message to.");
+                alert("No libraries targeted. Please check your selection.");
                 setIsSending(false);
                 return;
             }
@@ -552,9 +579,9 @@ const NotificationsView = ({ accounts }: { accounts: LibraryAccount[] }) => {
             // Process in batches (simulated)
             for (let i = 0; i < targetIds.length; i += batchSize) {
                 const batch = targetIds.slice(i, i + batchSize);
-                await Promise.all(batch.map(libId => 
-                     Store.sendNotification({
-                         id: `notif-${Date.now()}-${libId}`,
+                await Promise.all(batch.map(libId => {
+                     return Store.sendNotification({
+                         id: `notif-${Date.now()}-${Math.floor(Math.random() * 10000)}`, // Ensure unique ID per target
                          libraryId: libId,
                          title,
                          message,
@@ -563,10 +590,11 @@ const NotificationsView = ({ accounts }: { accounts: LibraryAccount[] }) => {
                          linkText: ctaText || undefined,
                          date: format(new Date(), 'yyyy-MM-dd HH:mm'),
                          isRead: false
-                     })
-                ));
+                     });
+                }));
             }
-            alert(`Notification sent to ${targetIds.length} libraries!`);
+            alert(`Notification sent successfully to ${targetIds.length} libraries!`);
+            // Reset Form
             setTitle(''); setMessage(''); setImageUrl(''); setCtaLink(''); setCtaText('');
             setSelectedIds(new Set<string>());
         } catch (e: unknown) {
@@ -577,8 +605,6 @@ const NotificationsView = ({ accounts }: { accounts: LibraryAccount[] }) => {
             setIsSending(false);
         }
     };
-
-    const filteredAccounts = accounts.filter(a => a.libraryName.toLowerCase().includes(search.toLowerCase()));
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in-up">
@@ -620,7 +646,7 @@ const NotificationsView = ({ accounts }: { accounts: LibraryAccount[] }) => {
                                      <input className="w-full text-sm p-2 border rounded bg-slate-50" placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
                                  </div>
                                  <div className="p-2 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
-                                     <button onClick={toggleSelectAll}>{selectedIds.size === filteredAccounts.length ? <CheckSquare className="h-4 w-4 text-primary-700"/> : <Square className="h-4 w-4 text-slate-400"/>}</button>
+                                     <button onClick={toggleSelectAll}>{selectedIds.size === filteredAccounts.length && filteredAccounts.length > 0 ? <CheckSquare className="h-4 w-4 text-primary-700"/> : <Square className="h-4 w-4 text-slate-400"/>}</button>
                                      <span className="text-xs font-bold text-slate-500">{selectedIds.size} Selected</span>
                                  </div>
                                  <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -650,226 +676,97 @@ const NotificationsView = ({ accounts }: { accounts: LibraryAccount[] }) => {
     );
 };
 
-const SettingsView = () => {
+export const SuperAdmin: React.FC<SuperAdminProps> = ({ setUser }) => {
+    const [activeTab, setActiveTab] = useState('DASHBOARD');
+    const [accounts, setAccounts] = useState<LibraryAccount[]>([]);
+    
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    const loadData = async () => {
+        const data = await Store.refreshAccounts();
+        setAccounts(data);
+    };
+
     return (
-        <div className="space-y-6 animate-fade-in-up max-w-2xl">
-             <Card title="Platform Configuration">
-                 <div className="space-y-6">
-                     <div className="flex items-center justify-between">
-                         <div>
-                             <h4 className="font-bold text-slate-800">Maintenance Mode</h4>
-                             <p className="text-xs text-slate-500">Disable login for all non-superadmin users.</p>
-                         </div>
-                         <div className="relative inline-flex h-6 w-11 items-center rounded-full bg-slate-200">
-                             <span className="translate-x-1 inline-block h-4 w-4 transform rounded-full bg-white transition"/>
-                         </div>
+        <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
+            {/* Header */}
+            <header className="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shadow-md sticky top-0 z-50">
+                <div className="flex items-center gap-3">
+                    <div className="bg-orange-600 p-2 rounded-lg">
+                        <ShieldCheck className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-bold tracking-tight">Super Admin Console</h1>
+                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-widest">Master Control Plane</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4">
+                     <div className="hidden md:block text-right">
+                         <div className="text-sm font-bold text-white">Shrinath (Dev)</div>
+                         <div className="text-xs text-slate-400">System Administrator</div>
                      </div>
-                 </div>
-             </Card>
+                     <div className="h-10 w-10 bg-slate-800 rounded-full flex items-center justify-center border border-slate-700">
+                         <User className="h-5 w-5 text-slate-400" />
+                     </div>
+                     <button onClick={() => { Store.logout(); setUser(null); }} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
+                         <LogOut className="h-5 w-5" />
+                     </button>
+                </div>
+            </header>
+
+            <div className="flex flex-1 overflow-hidden">
+                {/* Sidebar */}
+                <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col">
+                    <nav className="p-4 space-y-1">
+                        {[
+                            { id: 'DASHBOARD', icon: LayoutDashboard, label: 'Overview' },
+                            { id: 'LIBRARIES', icon: Database, label: 'Library Management' },
+                            { id: 'FOLLOWUPS', icon: AlertCircle, label: 'Renewals & Expiry' },
+                            { id: 'REPORTS', icon: PieChart, label: 'Analytics' },
+                            { id: 'NOTIFICATIONS', icon: BellRing, label: 'Broadcasts' },
+                        ].map(item => (
+                            <button
+                                key={item.id}
+                                onClick={() => setActiveTab(item.id)}
+                                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all ${activeTab === item.id ? 'bg-slate-900 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}
+                            >
+                                <item.icon className={`h-5 w-5 ${activeTab === item.id ? 'text-orange-500' : 'text-slate-400'}`} />
+                                {item.label}
+                            </button>
+                        ))}
+                    </nav>
+                    <div className="mt-auto p-4 border-t border-slate-100">
+                         <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                             <div className="text-xs font-bold text-slate-500 uppercase mb-1">System Status</div>
+                             <div className="flex items-center gap-2 text-sm font-bold text-green-600">
+                                 <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                                 Operational
+                             </div>
+                         </div>
+                    </div>
+                </aside>
+
+                {/* Main Content */}
+                <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="mb-6 flex justify-between items-end">
+                            <div>
+                                <h2 className="text-2xl font-bold text-slate-900">{activeTab.charAt(0) + activeTab.slice(1).toLowerCase().replace('_', ' ')}</h2>
+                                <p className="text-sm text-slate-500">Real-time data from {accounts.length} connected libraries.</p>
+                            </div>
+                            <Button variant="outline" size="sm" onClick={loadData} icon={Activity}>Refresh Data</Button>
+                        </div>
+
+                        {activeTab === 'DASHBOARD' && <DashboardView accounts={accounts} />}
+                        {activeTab === 'LIBRARIES' && <LibrariesView accounts={accounts} onRefresh={loadData} />}
+                        {activeTab === 'FOLLOWUPS' && <FollowupsView accounts={accounts} />}
+                        {activeTab === 'REPORTS' && <ReportsView accounts={accounts} />}
+                        {activeTab === 'NOTIFICATIONS' && <NotificationsView accounts={accounts} />}
+                    </div>
+                </main>
+            </div>
         </div>
     );
-};
-
-// Main Component
-export const SuperAdmin: React.FC<SuperAdminProps> = ({ setUser }) => {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'DASHBOARD' | 'LIBRARIES' | 'FOLLOWUPS' | 'REPORTS' | 'NOTIFICATIONS' | 'SETTINGS'>('DASHBOARD');
-  const [accounts, setAccounts] = useState<LibraryAccount[]>([]);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
-  // Create Account Form State
-  const [formData, setFormData] = useState<FormDataState>({ plan: 'YEARLY', duration: 12, district: 'Pune' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => { loadAccounts(); }, []);
-
-  const loadAccounts = async () => {
-    const data = await Store.refreshAccounts();
-    setAccounts(data);
-  };
-
-  const handleCreate = async () => {
-    if (!formData.username || !formData.password || !formData.libraryName) return alert("Required fields missing");
-    
-    // Validate password length
-    if (formData.password!.length < 6) {
-        return alert("Password must be at least 6 characters long.");
-    }
-
-    // Validate email format
-    if (!formData.username!.includes('@') || !formData.username!.includes('.')) {
-        return alert("Username must be a valid email address (e.g., admin@library.com)");
-    }
-
-    // Check duplicates
-    if (accounts.some(a => a.username === formData.username)) return alert("Username (Email) already taken");
-
-    setIsSubmitting(true);
-    try {
-        let months = 12;
-        if(formData.plan === '6_MONTHS') months = 6;
-        if(formData.plan === 'LIFETIME') months = 1200; // 100 years
-
-        const expiryDate = addMonths(new Date(), months);
-        
-        // Generate Key
-        const uniqueKey = `ABHY-${Math.random().toString(36).substring(2,6).toUpperCase()}-${Math.random().toString(36).substring(2,6).toUpperCase()}`;
-
-        const newAccount: LibraryAccount = {
-            id: `lib-${Date.now()}`,
-            username: formData.username || '',
-            password: formData.password || '',
-            libraryName: formData.libraryName || '',
-            city: formData.city || (formData.taluka ? `${formData.taluka}, ${formData.district}` : 'Maharashtra'),
-            district: formData.district || '',
-            taluka: formData.taluka || '',
-            isActive: true,
-            createdAt: format(new Date(), 'yyyy-MM-dd'),
-            ownerName: formData.ownerName || '',
-            mobile: formData.mobile || '',
-            plan: formData.plan as any,
-            licenseKey: uniqueKey,
-            licenseExpiry: format(expiryDate, 'yyyy-MM-dd'),
-            maxSeats: 500 // Default max
-        };
-
-        await Store.addAccount(newAccount);
-        setFormData({ plan: 'YEARLY', district: 'Pune' });
-        setIsCreateModalOpen(false);
-        loadAccounts();
-        alert("Lab Profile Created! Verification email sent.");
-    } catch (e: any) {
-        const errorMessage = e instanceof Error ? e.message : String(e);
-        alert("Failed to create library: " + errorMessage);
-    } finally {
-        setIsSubmitting(false);
-    }
-  };
-
-  const handleLogout = () => {
-    Store.logout();
-    setUser(null);
-    navigate('/');
-  };
-
-  const renderContent = () => {
-      switch(activeTab) {
-          case 'DASHBOARD': return <DashboardView accounts={accounts} />;
-          case 'LIBRARIES': return <LibrariesView accounts={accounts} onRefresh={loadAccounts} />;
-          case 'FOLLOWUPS': return <FollowupsView accounts={accounts} />;
-          case 'REPORTS': return <ReportsView accounts={accounts} />;
-          case 'NOTIFICATIONS': return <NotificationsView accounts={accounts} />;
-          case 'SETTINGS': return <SettingsView />;
-          default: return <DashboardView accounts={accounts} />;
-      }
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-50 flex font-sans">
-      
-      {/* Sidebar */}
-      <aside className="w-64 bg-sidebar text-slate-300 flex flex-col fixed inset-y-0 z-20">
-          <div className="p-6 flex items-center gap-3 text-white font-bold text-xl">
-              <div className="bg-primary-700 p-1.5 rounded-lg"><Database className="h-5 w-5"/></div>
-              <span>Admin<span className="text-primary-700">Console</span></span>
-          </div>
-          
-          <nav className="flex-1 px-3 space-y-1 mt-4">
-              {[
-                  { id: 'DASHBOARD', icon: LayoutDashboard, label: 'Dashboard' },
-                  { id: 'LIBRARIES', icon: Users, label: 'Libraries' },
-                  { id: 'FOLLOWUPS', icon: BellRing, label: 'Followups' },
-                  { id: 'REPORTS', icon: PieChart, label: 'Analytics' },
-                  { id: 'NOTIFICATIONS', icon: MessageSquare, label: 'Notifications' },
-                  { id: 'SETTINGS', icon: SettingsIcon, label: 'Platform Settings' },
-              ].map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id as any)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors ${activeTab === item.id ? 'bg-primary-700 text-white shadow-lg shadow-primary-900/50' : 'hover:bg-slate-800 hover:text-white'}`}
-                  >
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                  </button>
-              ))}
-          </nav>
-
-          <div className="p-4 border-t border-slate-700">
-              <div className="flex items-center gap-3 mb-4 px-2">
-                  <div className="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold text-white border border-slate-600">S</div>
-                  <div className="overflow-hidden">
-                      <p className="text-sm font-medium text-white truncate">Super Admin</p>
-                      <p className="text-xs text-slate-500 truncate">System Owner</p>
-                  </div>
-              </div>
-              <button onClick={handleLogout} className="flex w-full items-center justify-center gap-2 rounded-md border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-medium hover:bg-slate-700 hover:text-white transition-colors">
-                  <LogOut className="h-4 w-4" /> Logout
-              </button>
-          </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 ml-64 p-8">
-          <header className="flex justify-between items-center mb-8">
-              <div>
-                  <h1 className="text-2xl font-bold text-slate-900 capitalize">{activeTab.toLowerCase()}</h1>
-                  <p className="text-sm text-slate-500">Manage your SaaS platform efficiently.</p>
-              </div>
-              <Button icon={Plus} className="bg-primary-700 hover:bg-primary-800 shadow-lg shadow-primary-700/20" onClick={() => setIsCreateModalOpen(true)}>
-                  Create Lab Profile
-              </Button>
-          </header>
-
-          {renderContent()}
-
-          {/* Create Modal */}
-          <Modal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} title="Create Lab Profile">
-              <div className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
-                  <div className="grid grid-cols-2 gap-4">
-                      <div className="col-span-2"><h4 className="text-xs font-bold uppercase text-slate-500 mb-2">Owner Profile</h4></div>
-                      <Input placeholder="Owner Name" value={formData.ownerName} onChange={e => setFormData({...formData, ownerName: e.target.value})} />
-                      <Input placeholder="Mobile" value={formData.mobile} onChange={e => setFormData({...formData, mobile: e.target.value})} />
-                      <Input placeholder="Library Name" value={formData.libraryName} onChange={e => setFormData({...formData, libraryName: e.target.value})} />
-                      
-                      {/* Cascading Location */}
-                      <div className="space-y-1">
-                          <label className="text-xs font-medium text-slate-500">District</label>
-                          <select 
-                            className="w-full border rounded p-2 text-sm" 
-                            value={formData.district} 
-                            onChange={e => setFormData({...formData, district: e.target.value, taluka: ''})}
-                          >
-                             {Object.keys(MAHARASHTRA_DATA).map(d => <option key={d} value={d}>{d}</option>)}
-                          </select>
-                      </div>
-                      <div className="space-y-1">
-                          <label className="text-xs font-medium text-slate-500">Taluka</label>
-                          <select 
-                            className="w-full border rounded p-2 text-sm" 
-                            value={formData.taluka} 
-                            onChange={e => setFormData({...formData, taluka: e.target.value})}
-                          >
-                             <option value="">Select Taluka</option>
-                             {formData.district && MAHARASHTRA_DATA[formData.district]?.map((t: string) => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                      </div>
-
-                      <div className="col-span-2 pt-2"><h4 className="text-xs font-bold uppercase text-slate-500 mb-2">Access Duration</h4></div>
-                      <select className="col-span-2 border rounded p-2 text-sm" value={formData.plan} onChange={e => setFormData({...formData, plan: e.target.value as any})}>
-                          <option value="6_MONTHS">6 Months</option>
-                          <option value="YEARLY">Yearly</option>
-                          <option value="LIFETIME">Lifetime</option>
-                      </select>
-
-                      <div className="col-span-2 pt-2"><h4 className="text-xs font-bold uppercase text-slate-500 mb-2">Credentials</h4></div>
-                      <Input placeholder="Username (Email Address)" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} />
-                      <Input placeholder="Password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
-                  </div>
-                  <Button className="w-full bg-primary-700 hover:bg-primary-800" onClick={handleCreate} isLoading={isSubmitting}>Create Lab Profile</Button>
-              </div>
-          </Modal>
-      </main>
-
-    </div>
-  );
 };

@@ -729,6 +729,59 @@ export const Store = {
           }
       }
   },
+  updateRoom: async (room: Room) => {
+      const rooms = Store.getRooms();
+      const idx = rooms.findIndex(r => r.id === room.id);
+      if (idx === -1) return;
+
+      const currentRoom = rooms[idx];
+      const newCount = room.capacity || 0;
+
+      const allSeats = Store.getSeats();
+      const roomSeats = allSeats.filter(s => s.roomId === room.id);
+      const currentCount = roomSeats.length;
+
+      // Pre-check for reduction
+      let seatsToRemove: Seat[] = [];
+      if (newCount < currentCount) {
+           seatsToRemove = roomSeats.filter(s => {
+              const num = parseInt(s.label);
+              return !isNaN(num) && num > newCount;
+          });
+          
+          if (seatsToRemove.some(s => s.status === 'OCCUPIED')) {
+              throw new Error("Cannot reduce capacity: Some seats to be removed are currently occupied.");
+          }
+      }
+
+      // If check passes, proceed
+      rooms[idx] = { ...currentRoom, ...room };
+      localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(rooms));
+      await Store._syncLocalToCloud('rooms', rooms[idx]);
+
+      if (newCount > currentCount) {
+          const seatsToAdd = newCount - currentCount;
+          const newSeats: Seat[] = [];
+          for (let i = 0; i < seatsToAdd; i++) {
+              const seatNum = currentCount + i + 1;
+              newSeats.push({
+                  id: `${room.id}-${seatNum}`,
+                  label: String(seatNum),
+                  status: 'AVAILABLE',
+                  category: 'GENERAL',
+                  roomId: room.id
+              });
+          }
+          const updatedSeats = [...allSeats, ...newSeats];
+          localStorage.setItem(STORAGE_KEYS.SEATS, JSON.stringify(updatedSeats));
+          for (const s of newSeats) await Store._syncLocalToCloud('seats', s);
+      } else if (newCount < currentCount) {
+          const idsToRemove = new Set(seatsToRemove.map(s => s.id));
+          const remainingSeats = allSeats.filter(s => !idsToRemove.has(s.id));
+          localStorage.setItem(STORAGE_KEYS.SEATS, JSON.stringify(remainingSeats));
+          for (const s of seatsToRemove) await Store._deleteFromCloud('seats', s.id);
+      }
+  },
   deleteRoom: async (roomId: string) => {
       const rooms = Store.getRooms().filter(r => r.id !== roomId);
       localStorage.setItem(STORAGE_KEYS.ROOMS, JSON.stringify(rooms));
