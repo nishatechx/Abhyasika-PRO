@@ -1,6 +1,6 @@
 {
   "name": "Digital Abhyasika",
-  "description": "A comprehensive management system for study centers and libraries, featuring seat management, admissions, finance tracking, and real-time dashboard analytics.",
+  "description": "Digital Abhyasika is a smart Abhyasika management system to manage study library seats, attendance, student records, waiting lists, and fee collection with real-time seat availability.",
   "requestFramePermissions": [
     "camera"
   ]
